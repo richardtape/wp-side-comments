@@ -4,9 +4,9 @@
 	Plugin Name: WP Side Comments
 	Plugin URI: http://ctlt.ubc.ca/
 	Description: Based on aroc's Side Comments .js to enable inline commenting
-	Author: CTLT Dev
+	Author: CTLT Dev, Richard Tape
 	Author URI: http://ctlt.ubc.ca
-	Version: 0.1
+	Version: 0.1.1
 	*/
 
 	if( !defined( 'ABSPATH' ) ){
@@ -59,8 +59,10 @@
 		public function wp_enqueue_scripts__loadScriptsAndStyles()
 		{
 
-			// We don't have anything for the admin at the moment and comments are only on a single 
-			if( is_admin() || !is_single() ){
+			// Ensure we're on a post where we want to load our scripts/styles
+			$validScreen = $this->weAreOnAValidScreen();
+
+			if( !$validScreen ){
 				return;
 			}
 
@@ -98,6 +100,13 @@
 		public function post_class__addSideCommentsClassToContainer( $classes )
 		{
 
+			// Ensure we're on a post where we want to load our scripts/styles
+			$validScreen = $this->weAreOnAValidScreen();
+
+			if( !$validScreen ){
+				return $classes;
+			}
+
 			if( !$classes || !is_array( $classes ) ){
 
 				$classes = array();
@@ -123,6 +132,13 @@
 
 		public function the_content__addSideCommentsClassesToContent( $content )
 		{
+
+			// Ensure we're on a post where we want to load our scripts/styles
+			$validScreen = $this->weAreOnAValidScreen();
+
+			if( !$validScreen ){
+				return $content;
+			}
 
 			$regex = '|<p>|';
 
@@ -482,6 +498,36 @@
 			die();
 
 		}/* wp_ajax_nopriv_add_side_comment__redirectToLogin() */
+
+
+		/**
+		 * Method to determine if we're on the right place to load our scripts/styles and do our bits and pieces
+		 * basically, not admin, on a singular post/page and comments are open
+		 *
+		 * @since 0.1
+		 *
+		 * @param null
+		 * @return null
+		 */
+
+		private function weAreOnAValidScreen()
+		{
+
+			// We don't have anything for the admin at the moment and comments are only on a single 
+			if( is_admin() || !is_singular() ){
+				return false;
+			}
+
+			// Ensure comments are open on the post we're on
+			global $post;
+
+			if( ! comments_open( $post->ID ) ){
+				return false;
+			}
+
+			return true;
+
+		}/* weAreOnAValidScreen() */
 
 	}/* class CTLT_WP_Side_Comments */
 
