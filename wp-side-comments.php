@@ -97,6 +97,10 @@
 
 		public function post_class__addSideCommentsClassToContainer( $classes )
 		{
+			global $post;
+			if ( ! comments_open( $post->ID ) ) {
+				return $classes;
+			}
 
 			if( !$classes || !is_array( $classes ) ){
 
@@ -123,6 +127,10 @@
 
 		public function the_content__addSideCommentsClassesToContent( $content )
 		{
+			global $post;
+			if ( ! comments_open( $post->ID ) ) {
+				return $classes;
+			}
 
 			$regex = '|<p>|';
 
