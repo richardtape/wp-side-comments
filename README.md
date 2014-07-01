@@ -1,4 +1,4 @@
 wp-side-comments
 ================
 
-Based on aroc's Side Comments .js to enable inline commenting. Medium.com-style inline commenting for WordPress
+Based on Eric Anderson's [SideComments.js](https://github.com/aroc/side-comments) to enable inline commenting. Medium.com-style inline commenting for WordPress
