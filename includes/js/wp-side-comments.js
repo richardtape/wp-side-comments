@@ -1,15 +1,16 @@
 jQuery(document).ready(function($) {
 
 	// Initialize ourselves
-	var SideComments 	= require( 'side-comments' );
+	var SideComments 		= require( 'side-comments' );
 
 	// We get this data from PHP
-	var postComments 	= commentsData.comments;
-	var userData 		= commentsData.user;
+	var postComments 		= commentsData.comments;
+	var userData 			= commentsData.user;
 
-	var nonce 			= commentsData.nonce;
-	var postID 			= commentsData.postID;
-	var ajaxURL 		= commentsData.ajaxURL;
+	var nonce 				= commentsData.nonce;
+	var postID 				= commentsData.postID;
+	var ajaxURL 			= commentsData.ajaxURL;
+	var containerSelector 	= commentsData.containerSelector;
 
 	// Format our data as side-comments.js requires
 	currentUser = {
@@ -39,7 +40,7 @@ jQuery(document).ready(function($) {
 	}
 
 	// Then, create a new SideComments instance, passing in the wrapper element and the optional the current user and any existing comments.
-	sideComments = new SideComments( '.commentable-container', currentUser, formattedCommentData );
+	sideComments = new SideComments( containerSelector, currentUser, formattedCommentData );
 
 	// http://stackoverflow.com/questions/9329446/how-to-do-for-each-over-an-array-in-javascript
 	function arrayHasOwnIndex(array, prop) {
@@ -48,19 +49,19 @@ jQuery(document).ready(function($) {
 
 	// We need to listen for the post and delete events and post an AJAX response back to PHP
 	sideComments.on( 'commentPosted', function( comment ){
-		console.log( comment );
+		
 		$.ajax( {
 			url: ajaxURL,
 			dataType: 'json',
 			type: 'POST',
 			data: {
-				action: 'add_side_comment',
-				nonce: nonce,
-				postID: postID,
-				sectionID: comment.sectionId,
-				comment: comment.comment,
-				authorName: comment.authorName,
-				authorId: comment.authorId
+				action: 		'add_side_comment',
+				nonce: 			nonce,
+				postID: 		postID,
+				sectionID: 		comment.sectionId,
+				comment: 		comment.comment,
+				authorName: 	comment.authorName,
+				authorId: 		comment.authorId
 			},
 			success: function( response ){
 

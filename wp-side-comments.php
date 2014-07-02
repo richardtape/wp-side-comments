@@ -300,12 +300,38 @@
 			$userID = get_current_user_id();
 
 			if( !$userID ){
-				return false;
+				return static::getDefaultuserDetails();
 			}
 
 			return static::getUserDetails( $userID );
 
 		}/* getCurrentUserDetails() */
+
+
+		/**
+		 * Default user details (Temp method)
+		 *
+		 *
+		 * @since 0.1
+		 * @todo Remove this in favour of using the correct comment_form() method to produce the markup for the comments form
+		 *
+		 * @param string $param description
+		 * @return string|int returnDescription
+		 */
+
+		public static function getDefaultuserDetails()
+		{
+
+			// Build our output
+			$userDetails = array(
+				'name' 		=> __( 'Anonymous', 'wp-side-comments' ),
+				'avatar' 	=> static::get_avatar_url( 'test@test.com' ),
+				'id' 		=> 9999
+			);
+
+			return $userDetails;
+
+		}/* getDefaultuserDetails() */
 
 
 		/**
@@ -473,7 +499,9 @@
 
 
 		/**
-		 * AJAX handler for when someone is NOT logged in and trying to make a comment
+		 * AJAX handler for when someone is NOT logged in and trying to make a comment.
+		 * Probably should never get to here because of comments_open() being used, but
+		 * better safe than sorry.
 		 *
 		 * @since 0.1
 		 *
