@@ -47,6 +47,8 @@ jQuery(document).ready(function($) {
 		return array.hasOwnProperty(prop) && /^0$|^[1-9]\d*$/.test(prop) && prop <= 4294967294; // 2^32 - 2
 	}
 
+	var newCommentID;
+
 	// We need to listen for the post and delete events and post an AJAX response back to PHP
 	sideComments.on( 'commentPosted', function( comment ){
 		
@@ -68,10 +70,15 @@ jQuery(document).ready(function($) {
 				if( response.type == 'success' ){
 
 					// OK, we can insert it into the stream
-					sideComments.insertComment( comment );
+					comment.id = response.newCommentID;
+					newCommentID = response.newCommentID;
+
+					// We'll need this if we want to delete the comment.
+					var newComment = sideComments.insertComment( comment );
 
 				}else{
 
+					console.log( 'success, response.type not equal to success' );
 					console.log( response );
 
 				}
@@ -83,7 +90,43 @@ jQuery(document).ready(function($) {
 
 	// Listen to "commentDeleted" and send a request to your backend to delete the comment.
 	// More about this event in the "docs" section.
-	sideComments.on('commentDeleted', function( commentId ) {
+	sideComments.on( 'commentDeleted', function( comment ){
+	
+
+		$.ajax( {
+			url: ajaxURL,
+			dataType: 'json',
+			type: 'POST',
+			data: {
+				action: 		'delete_side_comment',
+				nonce: 			nonce,
+				postID: 		postID,
+				commentID: 		comment.id
+			},
+			success: function( response ){
+				
+				if( response.type == 'success' ){
+
+					comment.sectionId = comment.sectionId;
+
+					// OK, we can remove it from the stream
+					sideComments.removeComment( comment.sectionId, newCommentID );
+
+				}else{
+
+					console.log( 'success, response.type not equal to success' );
+					console.log( response );
+
+				}
+
+			},
+			error: function( jqXHR, textStatus, errorThrown ){
+				console.log( 'in error' );
+				console.log( jqXHR );
+				console.log( textStatus );
+				console.log( errorThrown );
+			}
+		} );
 
 		// $.ajax({
 		// 	url: '/comments/' + commentId,

@@ -44,6 +44,10 @@
 			add_action( 'wp_ajax_add_side_comment', array( $this, 'wp_ajax_add_side_comment__AJAXHandler' ) );
 			add_action( 'wp_ajax_nopriv_add_side_comment', array( $this, 'wp_ajax_nopriv_add_side_comment__redirectToLogin' ) );
 
+			// Set up AJAX handlers for comment deltion
+			add_action( 'wp_ajax_delete_side_comment', array( $this, 'wp_ajax_delete_side_comment__AJAXHandler' ) );
+			add_action( 'wp_ajax_nopriv_delete_side_comment', array( $this, 'wp_ajax_nopriv_delete_side_comment__redirectToLogin' ) );
+
 		}/* __construct() */
 
 
@@ -528,6 +532,90 @@
 			die();
 
 		}/* wp_ajax_nopriv_add_side_comment__redirectToLogin() */
+
+
+		/**
+		 * AJAX handler for when a comment is deleted
+		 *
+		 * @since 0.1
+		 *
+		 * @param null
+		 * @return null
+		 */
+
+		public static function wp_ajax_delete_side_comment__AJAXHandler()
+		{
+
+			if( !wp_verify_nonce( $_REQUEST['nonce'], 'side_comments_nonce' ) ) {
+				exit( __( 'Nonce check failed', 'wp-side-comments' ) );
+			}
+
+			// Collect data sent to us via the AJAX request
+			$postID 		= absint( $_REQUEST['postID'] );
+			$commentID 		= absint( $_REQUEST['commentID'] );
+
+			// Force delete the comment?
+			$forceDelete = apply_filters( 'wp_side_comments_force_delete_comment', false );
+
+			$hasDeleted = wp_delete_comment( $commentID, $forceDelete );
+
+			if( $hasDeleted )
+			{
+
+				// Setup our data which we're echoing
+				$result = array(
+					'type' => 'success',
+					'forceDelete' => $forceDelete
+				);
+
+			}
+			else
+			{
+
+				$result = array(
+					'type' => 'failure',
+					'message' => __( 'The comment was not deleted', 'wp-side-comments' )
+				);
+
+			}
+
+			if( !empty( $_SERVER['HTTP_X_REQUESTED_WITH'] ) && strtolower( $_SERVER['HTTP_X_REQUESTED_WITH'] ) == 'xmlhttprequest' )
+			{
+
+				$result = json_encode( $result );
+				echo $result;
+			
+			}
+			else
+			{
+
+				header( 'Location: ' . $_SERVER['HTTP_REFERER'] );
+			
+			}
+
+			die();
+
+		}/* wp_ajax_delete_side_comment__AJAXHandler() */
+
+
+		/**
+		 * AJAX handler for when a comment is deleted and the user isn't logged in. Good luck with that.
+		 *
+		 *
+		 * @since 0.1
+		 *
+		 * @param null
+		 * @return null
+		 */
+
+		public static function wp_ajax_nopriv_delete_side_comment__redirectToLogin()
+		{
+
+
+
+		}/* wp_ajax_nopriv_delete_side_comment__redirectToLogin() */
+
+
 
 
 		/**
