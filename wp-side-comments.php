@@ -83,6 +83,8 @@
 			// We also need the admin url as we need to send an AJAX request to it
 			$data['ajaxURL'] = admin_url( 'admin-ajax.php' );
 
+			$data['containerSelector'] = apply_filters( 'wp_side_comments_container_css_selector', '.commentable-container' );
+
 			wp_localize_script( 'wp-side-comments-script', 'commentsData', $data );
 
 		}/* wp_enqueue_scripts__loadScriptsAndStyles() */
