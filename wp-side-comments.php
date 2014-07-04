@@ -6,7 +6,7 @@
 	Description: Based on aroc's Side Comments .js to enable inline commenting
 	Author: CTLT Dev, Richard Tape
 	Author URI: http://ctlt.ubc.ca
-	Version: 0.1.2
+	Version: 0.1.3
 	*/
 
 	if( !defined( 'ABSPATH' ) ){
