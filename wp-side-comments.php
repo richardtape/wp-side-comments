@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 	/*
 	Plugin Name: WP Side Comments
@@ -13,7 +13,7 @@
 		die( '-1' );
 	}
 
-	define( 'CTLT_WP_SIDE_COMMENTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+	define( 'CTLT_WP_SIDE_COMMENTS_PLUGIN_URL', get_stylesheet_directory_uri() . '/inc/wp-side-comments/' );
 
 
 	class CTLT_WP_Side_Comments
@@ -70,9 +70,6 @@
 				return;
 			}
 
-			// The theme to load - must be a string of the url to load
-			$theme = apply_filters( 'wp_side_comments_css_theme', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/css/themes/default-theme.css' );
-
 			wp_register_style( 'side-comments-style', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/css/side-comments.css' );
 			wp_register_script( 'side-comments-script', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/js/side-comments.js', array ( 'jquery' ) );
 			wp_register_script( 'wp-side-comments-script', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/js/wp-side-comments.js', array ( 'jquery', 'side-comments-script' ), null, true );
@@ -87,7 +84,7 @@
 				wp_register_style( 'side-comments-theme', $theme );
 				wp_enqueue_style( 'side-comments-theme' );
 
-			} 
+			}
 
 			// Need to get some data for our JS, which we pass to it via localization
 			$data = $this->getCommentsData();
@@ -178,7 +175,7 @@
 		{
 
 			static $i = 1;
-			
+
 			return sprintf( '<p class="commentable-section" data-section-id="%d">', $i++ );
 
 		}/* _addAttributesToParagraphCallback() */
@@ -277,7 +274,7 @@
 
 			foreach( $comments as $key => $commentData )
 			{
-			
+
 				$thisCommentID = $commentData->comment_ID;
 
 				$section = get_comment_meta( $thisCommentID, 'side-comment-section', true );
@@ -296,7 +293,7 @@
 			}
 
 			return $sideCommentData;
- 
+
 		}/* getPostCommentData() */
 
 
@@ -375,7 +372,10 @@
 			$name 			= ( isset( $user->user_nicename ) ) ? $user->user_nicename : $user->user_login;
 
 			$avatarURL 		= static::get_avatar_url( $user->user_email );
-			$avatarURL 		= ( isset( $getAvatarUrl ) && !empty( $getAvatarUrl ) ) ? $getAvatarUrl : includes_url( 'images/blank.gif' );
+
+			if( ! isset( $avatarURL ) || ! $avatarURL ){
+				$avatarURL 		= includes_url( 'images/blank.gif' );
+			}
 
 			// Build our output
 			$userDetails = array(
@@ -499,13 +499,13 @@
 
 				$result = json_encode( $result );
 				echo $result;
-			
+
 			}
 			else
 			{
 
 				header( 'Location: ' . $_SERVER['HTTP_REFERER'] );
-			
+
 			}
 
 			die();
@@ -537,7 +537,7 @@
 						home_url()
 					)
 				);
-				
+
 			}
 
 			die();
@@ -595,13 +595,13 @@
 
 				$result = json_encode( $result );
 				echo $result;
-			
+
 			}
 			else
 			{
 
 				header( 'Location: ' . $_SERVER['HTTP_REFERER'] );
-			
+
 			}
 
 			die();
@@ -642,7 +642,7 @@
 		private function weAreOnAValidScreen()
 		{
 
-			// We don't have anything for the admin at the moment and comments are only on a single 
+			// We don't have anything for the admin at the moment and comments are only on a single
 			if( is_admin() || !is_singular() ){
 				return false;
 			}
