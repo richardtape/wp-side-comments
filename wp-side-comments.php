@@ -78,7 +78,7 @@
 			wp_enqueue_script( 'side-comments-script' );
 			wp_enqueue_script( 'wp-side-comments-script' );
 
-			if( $theme && !empty( $theme ) )
+			if( isset( $theme ) )
 			{
 
 				wp_register_style( 'side-comments-theme', $theme );
