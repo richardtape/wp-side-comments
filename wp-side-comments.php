@@ -284,7 +284,7 @@
 				}
 
 				$sideCommentData[$section][] = array(
-					'authorAvatarUrl' => static::get_avatar_url( $commentData->comment_author_email ),
+					'authorAvatarUrl' => self::get_avatar_url( $commentData->comment_author_email ),
 					'authorName' => $commentData->comment_author,
 					'comment' => $commentData->comment_content,
 					'authorID' => $commentData->user_id
@@ -312,10 +312,10 @@
 			$userID = get_current_user_id();
 
 			if( !$userID ){
-				return static::getDefaultuserDetails();
+				return self::getDefaultuserDetails();
 			}
 
-			return static::getUserDetails( $userID );
+			return self::getUserDetails( $userID );
 
 		}/* getCurrentUserDetails() */
 
@@ -337,7 +337,7 @@
 			// Build our output
 			$userDetails = array(
 				'name' 		=> __( 'Anonymous', 'wp-side-comments' ),
-				'avatar' 	=> static::get_avatar_url( 'test@test.com' ),
+				'avatar' 	=> self::get_avatar_url( 'test@test.com' ),
 				'id' 		=> 9999
 			);
 
@@ -371,7 +371,7 @@
 			// We need name, ID and avatar url
 			$name 			= ( isset( $user->user_nicename ) ) ? $user->user_nicename : $user->user_login;
 
-			$avatarURL 		= static::get_avatar_url( $user->user_email );
+			$avatarURL 		= self::get_avatar_url( $user->user_email );
 
 			if( ! isset( $avatarURL ) || ! $avatarURL ){
 				$avatarURL 		= includes_url( 'images/blank.gif' );
