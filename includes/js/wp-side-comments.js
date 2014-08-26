@@ -1,16 +1,16 @@
 jQuery(document).ready(function($) {
 
 	// Initialize ourselves
-	var SideComments 		= require( 'side-comments' );
+	var SideComments = require( 'side-comments' );
 
 	// We get this data from PHP
-	var postComments 		= commentsData.comments;
-	var userData 			= commentsData.user;
+	var postComments = commentsData.comments;
+	var userData = commentsData.user;
 
-	var nonce 				= commentsData.nonce;
-	var postID 				= commentsData.postID;
-	var ajaxURL 			= commentsData.ajaxURL;
-	var containerSelector 	= commentsData.containerSelector;
+	var nonce = commentsData.nonce;
+	var postID = commentsData.postID;
+	var ajaxURL = commentsData.ajaxURL;
+	var containerSelector = commentsData.containerSelector;
 
 	// Format our data as side-comments.js requires
 	currentUser = {
@@ -57,13 +57,13 @@ jQuery(document).ready(function($) {
 			dataType: 'json',
 			type: 'POST',
 			data: {
-				action: 		'add_side_comment',
-				nonce: 			nonce,
-				postID: 		postID,
-				sectionID: 		comment.sectionId,
-				comment: 		comment.comment,
-				authorName: 	comment.authorName,
-				authorId: 		comment.authorId
+				action: 'add_side_comment',
+				nonce: nonce,
+				postID: postID,
+				sectionID: comment.sectionId,
+				comment: comment.comment,
+				authorName: comment.authorName,
+				authorId: comment.authorId
 			},
 			success: function( response ){
 				//get current .comments-wrapper by data-id
@@ -122,10 +122,10 @@ jQuery(document).ready(function($) {
 			dataType: 'json',
 			type: 'POST',
 			data: {
-				action: 		'delete_side_comment',
-				nonce: 			nonce,
-				postID: 		postID,
-				commentID: 		comment.id
+				action: 'delete_side_comment',
+				nonce: nonce,
+				postID: postID,
+				commentID: comment.id
 			},
 			success: function( response ){
 				
