@@ -80,10 +80,8 @@
 
 			if( isset( $theme ) )
 			{
-
 				wp_register_style( 'side-comments-theme', $theme );
 				wp_enqueue_style( 'side-comments-theme' );
-
 			}
 
 			// Need to get some data for our JS, which we pass to it via localization
@@ -336,9 +334,9 @@
 
 			// Build our output
 			$userDetails = array(
-				'name' 		=> __( 'Anonymous', 'wp-side-comments' ),
-				'avatar' 	=> self::get_avatar_url( 'test@test.com' ),
-				'id' 		=> 9999
+				'name' => __( 'Anonymous', 'wp-side-comments' ),
+				'avatar' => self::get_avatar_url( 'test@test.com' ),
+				'id' => 9999
 			);
 
 			return $userDetails;
@@ -369,12 +367,12 @@
 			}
 
 			// We need name, ID and avatar url
-			$name 			= ( isset( $user->user_nicename ) ) ? $user->user_nicename : $user->user_login;
+			$name = ( isset( $user->user_nicename ) ) ? $user->user_nicename : $user->user_login;
 
-			$avatarURL 		= self::get_avatar_url( $user->user_email );
+			$avatarURL = self::get_avatar_url( $user->user_email );
 
 			if( ! isset( $avatarURL ) || ! $avatarURL ){
-				$avatarURL 		= includes_url( 'images/blank.gif' );
+				$avatarURL = includes_url( 'images/blank.gif' );
 			}
 
 			// Build our output
@@ -433,11 +431,11 @@
 			}
 
 			// Collect data sent to us via the AJAX request
-			$postID 		= absint( $_REQUEST['postID'] );
-			$sectionID 		= absint( $_REQUEST['sectionID'] );
-			$commentText	= strip_tags( $_REQUEST['comment'], '<p><a><br>' );
-			$authorName		= sanitize_text_field( $_REQUEST['authorName'] );
-			$authorID 		= absint( $_REQUEST['authorId'] );
+			$postID = absint( $_REQUEST['postID'] );
+			$sectionID = absint( $_REQUEST['sectionID'] );
+			$commentText = strip_tags( $_REQUEST['comment'], '<p><a><br>' );
+			$authorName = sanitize_text_field( $_REQUEST['authorName'] );
+			$authorID = absint( $_REQUEST['authorId'] );
 
 			$user = get_user_by( 'id', $authorID );
 
@@ -477,18 +475,18 @@
 			{
 				// The data we need for wp_insert_comment
 				$wpInsertCommentArgs = array(
-					'comment_post_ID' 		=> $postID,
-				    'comment_author' 		=> $authorName,
-				    'comment_author_email' 	=> $user->user_email,
-				    'comment_author_url' 	=> null,
-				    'comment_content' 		=> $commentText,
-				    'comment_type' 			=> '',
-				    'comment_parent' 		=> 0,
-				    'user_id' 				=> $authorID,
-				    'comment_author_IP' 	=> $ip,
-				    'comment_agent' 		=> $_SERVER['HTTP_USER_AGENT'],
-				    'comment_date' 			=> null,
-				    'comment_approved' 		=> $commentApproval
+					'comment_post_ID' => $postID,
+					'comment_author' => $authorName,
+					'comment_author_email' => $user->user_email,
+					'comment_author_url' => null,
+					'comment_content' => $commentText,
+					'comment_type' => '',
+					'comment_parent' => 0,
+					'user_id' => $authorID,
+					'comment_author_IP' => $ip,
+					'comment_agent' => $_SERVER['HTTP_USER_AGENT'],
+					'comment_date' => null,
+					'comment_approved' => $commentApproval
 				);
 	
 				$newCommentID = wp_insert_comment( $wpInsertCommentArgs );
@@ -587,8 +585,8 @@
 			}
 
 			// Collect data sent to us via the AJAX request
-			$postID 		= absint( $_REQUEST['postID'] );
-			$commentID 		= absint( $_REQUEST['commentID'] );
+			$postID = absint( $_REQUEST['postID'] );
+			$commentID = absint( $_REQUEST['commentID'] );
 
 			// Force delete the comment?
 			$forceDelete = apply_filters( 'wp_side_comments_force_delete_comment', false );
