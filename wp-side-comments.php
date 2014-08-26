@@ -450,26 +450,51 @@
 			}
 
 			$commentApproval = apply_filters( 'wp_side_comments_default_comment_approved_status', 1 );
+			
+			$commentError = false;
+			
+			//don't allow empty comments
+			if( empty($commentText) )
+			{
+				$commentError = true;
+				
+				$result = array(
+					'type' => 'error',
+					'message' => __( 'Comment cannot be blank', 'wp-side-comments' ),
+				);
+			}
+			//comments must be at least two words
+			elseif( str_word_count($commentText) <= 1 )
+			{
+				$commentError = true;
+				
+				$result = array(
+					'type' => 'error',
+					'message' => __( 'Comment too short', 'wp-side-comments' ),
+				);
+			}
+			else
+			{
+				// The data we need for wp_insert_comment
+				$wpInsertCommentArgs = array(
+					'comment_post_ID' 		=> $postID,
+				    'comment_author' 		=> $authorName,
+				    'comment_author_email' 	=> $user->user_email,
+				    'comment_author_url' 	=> null,
+				    'comment_content' 		=> $commentText,
+				    'comment_type' 			=> '',
+				    'comment_parent' 		=> 0,
+				    'user_id' 				=> $authorID,
+				    'comment_author_IP' 	=> $ip,
+				    'comment_agent' 		=> $_SERVER['HTTP_USER_AGENT'],
+				    'comment_date' 			=> null,
+				    'comment_approved' 		=> $commentApproval
+				);
+	
+				$newCommentID = wp_insert_comment( $wpInsertCommentArgs );
+			}
 
-			// The data we need for wp_insert_comment
-			$wpInsertCommentArgs = array(
-				'comment_post_ID' 		=> $postID,
-			    'comment_author' 		=> $authorName,
-			    'comment_author_email' 	=> $user->user_email,
-			    'comment_author_url' 	=> null,
-			    'comment_content' 		=> $commentText,
-			    'comment_type' 			=> '',
-			    'comment_parent' 		=> 0,
-			    'user_id' 				=> $authorID,
-			    'comment_author_IP' 	=> $ip,
-			    'comment_agent' 		=> $_SERVER['HTTP_USER_AGENT'],
-			    'comment_date' 			=> null,
-			    'comment_approved' 		=> $commentApproval
-			);
-
-			$newCommentID = wp_insert_comment( $wpInsertCommentArgs );
-
-			if( $newCommentID )
+			if( $newCommentID && !$commentError )
 			{
 
 				// Now we have a new comment ID, we need to add the meta for the section, stored as 'side-comment-section'
@@ -483,7 +508,7 @@
 				);
 
 			}
-			else
+			elseif( !$commentError )
 			{
 
 				// wp_insert_comment failed

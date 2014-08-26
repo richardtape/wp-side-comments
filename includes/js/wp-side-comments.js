@@ -66,9 +66,33 @@ jQuery(document).ready(function($) {
 				authorId: 		comment.authorId
 			},
 			success: function( response ){
-
-				if( response.type == 'success' ){
-
+				//get current .comments-wrapper by data-id
+				var currentComment = $('.commentable-section[data-section-id="' + comment.sectionId + '"] .comments-wrapper' ),
+				//get the .comment-box inside the current wrapper
+				commentBox = $('.comment-box', currentComment),
+				//get the error div if it exists
+				errorDiv = $('.error-message', currentComment);
+				
+				if ( response.type == 'error' ) {
+					//add an error class to the current comment wrapper
+					currentComment.addClass('error');
+					
+					//if the error div doesn't exist, create it
+					if ( !errorDiv.length ) {
+						//and add the error message
+						commentBox.after('<div class="error-message">' + response.message + '</div>');
+					} else{
+						//otherwise set the error message
+						errorDiv.text(response.message);
+					}
+					
+				} else if( response.type == 'success' ){
+					//remove erorr class, add sucess class
+					currentComment.removeClass('error').addClass('success');
+					
+					//remove error message on success
+					errorDiv.remove();
+					
 					// OK, we can insert it into the stream
 					comment.id = response.newCommentID;
 					newCommentID = response.newCommentID;
@@ -76,7 +100,7 @@ jQuery(document).ready(function($) {
 					// We'll need this if we want to delete the comment.
 					var newComment = sideComments.insertComment( comment );
 
-				}else{
+				} else{
 
 					console.log( 'success, response.type not equal to success' );
 					console.log( response );
