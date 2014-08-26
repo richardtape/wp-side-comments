@@ -96,7 +96,10 @@
 			$data['nonce'] = wp_create_nonce( 'side_comments_nonce' );
 
 			// We also need the admin url as we need to send an AJAX request to it
-			$data['ajaxURL'] = admin_url( 'admin-ajax.php' );
+			// ToDo: fix this, as we need this to not be https for it to work atm
+			$adminAjaxURL = admin_url( 'admin-ajax.php' );
+			$nonHTTPS = preg_replace( '/^https(?=:\/\/)/i', 'http', $adminAjaxURL );
+			$data['ajaxURL'] = $nonHTTPS;
 
 			$data['containerSelector'] = apply_filters( 'wp_side_comments_container_css_selector', '.commentable-container' );
 
@@ -527,13 +530,13 @@
 		public static function wp_ajax_nopriv_add_side_comment__redirectToLogin()
 		{
 
-			$redirect = apply_filters( 'wp_side_comments_redirect_on_not_logged_in_comment_submission', $_SERVER['HTTP_REFERER'] );
+			$redirect = apply_filters( 'wp_side_comments_redirect_on_not_logged_in_comment_submission', urlencode( $_SERVER['HTTP_REFERER'] ) );
 
 			if( $redirect ){
 
 				wp_redirect(
 					add_query_arg(
-						array( 'redirect_to' => $redirect ),
+						array( 'redirect_to' => $redirect, 'nopriv' => '1' ),
 						home_url()
 					)
 				);
