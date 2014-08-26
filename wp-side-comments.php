@@ -42,7 +42,8 @@
 
 			// Set up AJAX handlers for the create a new comment action
 			add_action( 'wp_ajax_add_side_comment', array( $this, 'wp_ajax_add_side_comment__AJAXHandler' ) );
-			add_action( 'wp_ajax_nopriv_add_side_comment', array( $this, 'wp_ajax_nopriv_add_side_comment__redirectToLogin' ) );
+			//add_action( 'wp_ajax_nopriv_add_side_comment', array( $this, 'wp_ajax_nopriv_add_side_comment__redirectToLogin' ) );
+			add_action( 'wp_ajax_nopriv_add_side_comment', array( $this, 'wp_ajax_add_side_comment__AJAXHandler' ) );
 
 			// Set up AJAX handlers for comment deltion
 			add_action( 'wp_ajax_delete_side_comment', array( $this, 'wp_ajax_delete_side_comment__AJAXHandler' ) );
@@ -436,6 +437,10 @@
 			$commentText = strip_tags( $_REQUEST['comment'], '<p><a><br>' );
 			$authorName = sanitize_text_field( $_REQUEST['authorName'] );
 			$authorID = absint( $_REQUEST['authorId'] );
+			$loggedInToComment = get_option('comment_registration');
+			$requireNameEmail = get_option('require_name_email');
+			$commentModeration = get_option('comment_moderation');
+			$commentWhitelist = get_option('comment_whitelist');
 
 			$user = get_user_by( 'id', $authorID );
 
@@ -447,12 +452,31 @@
 				$ip = $_SERVER['REMOTE_ADDR'];
 			}
 
-			$commentApproval = apply_filters( 'wp_side_comments_default_comment_approved_status', 1 );
+			//$commentApproval = apply_filters( 'wp_side_comments_default_comment_approved_status', 1 );
+			
+			//if comments need to be approved manually or whitelist required and anonymous user
+			if( $commentModeration || ($commentWhitelist && !is_user_logged_in()) ){
+				$commentApproval = 0;
+			} else{
+				$commentApproval = 1;
+			}
 			
 			$commentError = false;
 			
+			
+			//if users must be logged in and they are not
+			if( ($loggedInToComment || $requireNameEmail) && !is_user_logged_in() )
+			{
+				$commentError = true;
+				
+				$result = array(
+					'type' => 'error',
+					'message' => __( 'You must be signed in to comment', 'wp-side-comments' ),
+					'loginURL' => wp_login_url(get_permalink($postID)),
+				);
+			}
 			//don't allow empty comments
-			if( empty($commentText) )
+			elseif( empty($commentText) )
 			{
 				$commentError = true;
 				
@@ -503,6 +527,7 @@
 					'type' => 'success',
 					'newCommentID' => $newCommentID,
 					'commentApproval' => $commentApproval,
+					'message' => __( 'Comment submitted for approval', 'wp-side-comments' ),
 				);
 
 			}
