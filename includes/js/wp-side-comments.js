@@ -51,7 +51,7 @@ jQuery(document).ready(function($) {
 
 	// We need to listen for the post and delete events and post an AJAX response back to PHP
 	sideComments.on( 'commentPosted', function( comment ){
-		
+
 		$.ajax( {
 			url: ajaxURL,
 			dataType: 'json',
@@ -78,10 +78,15 @@ jQuery(document).ready(function($) {
 
 				}else{
 
-					console.log( 'success, response.type not equal to success' );
-					console.log( response );
+					// console.log( 'success, response.type not equal to success' );
+					// console.log( response );
 
 				}
+
+			},
+			error: function( jqXHR, textStatus, errorThrown ){
+				
+				// console.log( [jqXHR, textStatus, errorThrown] );
 
 			}
 		} );
