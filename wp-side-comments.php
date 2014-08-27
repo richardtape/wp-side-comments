@@ -48,6 +48,9 @@
 			add_action( 'wp_ajax_delete_side_comment', array( $this, 'wp_ajax_delete_side_comment__AJAXHandler' ) );
 			add_action( 'wp_ajax_nopriv_delete_side_comment', array( $this, 'wp_ajax_nopriv_delete_side_comment__redirectToLogin' ) );
 
+			// Side comments shouldn't be shown in the main comment area at the bototm
+			add_filter( 'wp-hybrid-clf_list_comments_args', array( $this, 'list_comments_args__removeSidecommentsFromLinearComments' ) );
+
 		}/* __construct() */
 
 
@@ -457,17 +460,17 @@
 			// The data we need for wp_insert_comment
 			$wpInsertCommentArgs = array(
 				'comment_post_ID' 		=> $postID,
-			    'comment_author' 		=> $authorName,
-			    'comment_author_email' 	=> $user->user_email,
-			    'comment_author_url' 	=> null,
-			    'comment_content' 		=> $commentText,
-			    'comment_type' 			=> '',
-			    'comment_parent' 		=> 0,
-			    'user_id' 				=> $authorID,
-			    'comment_author_IP' 	=> $ip,
-			    'comment_agent' 		=> $_SERVER['HTTP_USER_AGENT'],
-			    'comment_date' 			=> null,
-			    'comment_approved' 		=> $commentApproval
+				'comment_author' 		=> $authorName,
+				'comment_author_email' 	=> $user->user_email,
+				'comment_author_url' 	=> null,
+				'comment_content' 		=> $commentText,
+				'comment_type' 			=> '',
+				'comment_parent' 		=> 0,
+				'user_id' 				=> $authorID,
+				'comment_author_IP' 	=> $ip,
+				'comment_agent' 		=> $_SERVER['HTTP_USER_AGENT'],
+				'comment_date' 			=> null,
+				'comment_approved' 		=> $commentApproval
 			);
 
 			$newCommentID = wp_insert_comment( $wpInsertCommentArgs );
@@ -661,7 +664,163 @@
 
 		}/* weAreOnAValidScreen() */
 
+
+		/**
+		 * Remove side-comments from the linear-comments display - currently for the hybrid comments args
+		 *
+		 *
+		 * @since 0.1
+		 *
+		 * @param array $args args for wp_list_comments()
+		 * @return array $args modified args for wp_list_comments()
+		 */
+
+		public function list_comments_args__removeSidecommentsFromLinearComments( $args )
+		{
+
+			$args['walker'] = new SideCommentsWalker();
+
+			return $args;
+
+		}/* list_comments_args__removeSidecommentsFromLinearComments() */
+
 	}/* class CTLT_WP_Side_Comments */
 
 	global $CTLT_WP_Side_Comments;
 	$CTLT_WP_Side_Comments = new CTLT_WP_Side_Comments();
+
+
+	/**
+	 * Walker class to ensure the side comments don't get put into the main comments display
+	 *
+	 * @since 0.1
+	 */
+
+	class SideCommentsWalker extends Walker_Comment
+	{
+
+		// init classwide variables
+		var $tree_type = 'comment';
+		var $db_fields = array( 'parent' => 'comment_parent', 'id' => 'comment_ID' );
+
+		function start_lvl( &$output, $depth = 0, $args = array() )
+		{
+			
+			$GLOBALS['comment_depth'] = $depth + 1;
+  
+			switch ( $args['style'] ) {
+				case 'div':
+				break;
+			
+				case 'ol':
+					$output .= '<ol class="children">' . "\n";
+				break;
+			
+				case 'ul':
+				default:
+					$output .= '<ul class="children">' . "\n";
+				break;
+			}
+
+		}/* start_lvl() */
+
+		/** END_LVL 
+		 * Ends the children list of after the elements are added. */
+		function end_lvl( &$output, $depth = 0, $args = array() )
+		{
+		
+			$GLOBALS['comment_depth'] = $depth + 1;
+
+			switch ( $args['style'] ) {
+				
+				case 'div':
+				break;
+
+				case 'ol':
+					$output .= "</ol><!-- .children -->\n";
+				break;
+			
+				case 'ul':
+				default:
+					$output .= "</ul><!-- .children -->\n";
+				break;
+			}
+
+		}/* end_lvl() */
+
+		/** START_EL */
+		function start_el( &$output, $comment, $depth = 0, $args = array(), $id = 0 )
+		{
+
+			$depth++;
+			$GLOBALS['comment_depth'] = $depth;
+
+			$isSideComment = get_comment_meta( $comment->comment_ID, 'side-comment-section', true );
+
+			if( $isSideComment ){
+				$output .= '';
+				return;
+			}
+
+			$userID = get_current_user_id();
+			$postID = get_the_ID();
+
+			// Now let's see if the current user should be able to see this comment
+			$userCanSeeOneToOne = Studiorum_Lectio_Utils::userCanSeeOneToOne( $userID, $postID );
+
+			if( !$userCanSeeOneToOne ){
+				$output .= '';
+				return;
+			}
+
+			$GLOBALS['comment'] = $comment;
+
+			if ( !empty( $args['callback'] ) )
+			{
+				ob_start();
+				call_user_func( $args['callback'], $comment, $args, $depth );
+				$output .= ob_get_clean();
+				return;
+			}
+
+			if ( ( 'pingback' == $comment->comment_type || 'trackback' == $comment->comment_type ) && $args['short_ping'] )
+			{
+				ob_start();
+				$this->ping( $comment, $depth, $args );
+				$output .= ob_get_clean();
+			}
+			elseif( 'html5' === $args['format'] )
+			{
+				ob_start();
+				$this->html5_comment( $comment, $depth, $args );
+				$output .= ob_get_clean();
+			}
+			else
+			{
+				ob_start();
+				$this->comment( $comment, $depth, $args );
+				$output .= ob_get_clean();
+			}
+
+		}/* start_el() */
+
+		function end_el(&$output, $comment, $depth = 0, $args = array() )
+		{
+
+			if ( !empty( $args['end-callback'] ) )
+			{
+				ob_start();
+				call_user_func( $args['end-callback'], $comment, $args, $depth );
+				$output .= ob_get_clean();
+				return;
+			}
+
+			if ( 'div' == $args['style'] ){
+				$output .= "</div><!-- #comment-## -->\n";
+			}else{
+				$output .= "</li><!-- #comment-## -->\n";
+			}
+
+		}/* end_el() */
+
+	}/* class Walker_Comment */
