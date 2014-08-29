@@ -51,6 +51,9 @@
 			// Side comments shouldn't be shown in the main comment area at the bototm
 			add_filter( 'wp-hybrid-clf_list_comments_args', array( $this, 'list_comments_args__removeSidecommentsFromLinearComments' ) );
 
+			// When side comments are removed, the totals are wrong on the front-end
+			add_filter( 'get_comments_number', array( $this, 'get_comments_number__adjustCommentsNumberToRemoveSidecomments' ), 10, 2 );
+
 		}/* __construct() */
 
 
@@ -288,16 +291,27 @@
 
 				$section = get_comment_meta( $thisCommentID, 'side-comment-section', true );
 
+				$sideComment = false;
+				if( $section && !empty( $section ) ){
+					$sideComment = $section;
+				}
+
 				if( !isset( $sideCommentData[$section] ) ){
 					$sideCommentData[$section] = array();
 				}
 
-				$sideCommentData[$section][] = array(
+				$toAdd = array(
 					'authorAvatarUrl' => static::get_avatar_url( $commentData->comment_author_email ),
 					'authorName' => $commentData->comment_author,
 					'comment' => $commentData->comment_content,
 					'authorID' => $commentData->user_id
 				);
+
+				if( $sideComment && $sideComment != '' ){
+					$toAdd['sideComment'] = $section;
+				}
+
+				$sideCommentData[$section][] = $toAdd;
 
 			}
 
@@ -464,7 +478,7 @@
 				'comment_author_email' 	=> $user->user_email,
 				'comment_author_url' 	=> null,
 				'comment_content' 		=> $commentText,
-				'comment_type' 			=> '',
+				'comment_type' 			=> 'side-comment',
 				'comment_parent' 		=> 0,
 				'user_id' 				=> $authorID,
 				'comment_author_IP' 	=> $ip,
@@ -683,6 +697,51 @@
 			return $args;
 
 		}/* list_comments_args__removeSidecommentsFromLinearComments() */
+
+
+		/**
+		 * Adjust the comments total to remove side comments from the main list at the bottom of the page (linear comments)
+		 *
+		 * @since 0.1
+		 *
+		 * @param int $count The number of comments on this post
+		 * @param int $post_id The post ID
+		 * @return $count - modified number of comments
+		 */
+
+		public function get_comments_number__adjustCommentsNumberToRemoveSidecomments( $count, $post_id )
+		{
+
+			if( is_admin() ){
+				return $count;
+			}
+
+			if( get_post_type( $post_id ) != Studiorum_Lectio_Utils::$postTypeSlug ){
+				return $count;
+			}
+
+			// If this is being viewed by a student in the group, but not the author...
+			$userID = get_current_user_id();
+
+			$userCanSeeOneToOne = Studiorum_Lectio_Utils::userCanSeeOneToOne( $userID, $post_id );
+
+			if( !$userCanSeeOneToOne ){
+				return $count;
+			}
+
+			$allComments = static::getPostCommentData( $post_id );
+
+			$linearComments = 0;
+
+			foreach ($allComments as $key => $comments) {
+				if( $key == '' ){
+					$linearComments = count( $comments );
+				}
+			}
+
+			return $linearComments;	
+
+		}/* get_comments_number__adjustCommentsNumberToRemoveSidecomments() */
 
 	}/* class CTLT_WP_Side_Comments */
 
