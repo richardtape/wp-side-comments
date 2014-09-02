@@ -692,6 +692,10 @@
 		public function list_comments_args__removeSidecommentsFromLinearComments( $args )
 		{
 
+			if( !apply_filters( 'wp_side_comments_remove_side_comments_from_linear_comments', true ) ){
+				return $args;
+			}
+
 			$args['walker'] = new SideCommentsWalker();
 
 			return $args;
@@ -716,16 +720,22 @@
 				return $count;
 			}
 
-			if( get_post_type( $post_id ) != Studiorum_Lectio_Utils::$postTypeSlug ){
+			$defaultPostTypes = array();
+
+			$postTypesToAdjustCommentsFor = apply_filters( 'wp_side_comments_get_comments_number_post_types', $defaultPostTypes, $post_id );
+			
+			$thisPostsType = get_post_type( $post_id );
+
+			if( !in_array( $thisPostsType, array_values( $postTypesToAdjustCommentsFor ) ) ){
 				return $count;
 			}
 
 			// If this is being viewed by a student in the group, but not the author...
 			$userID = get_current_user_id();
 
-			$userCanSeeOneToOne = Studiorum_Lectio_Utils::userCanSeeOneToOne( $userID, $post_id );
+			$continue = apply_filters( 'wp_side_comments_before_adjust_comment_count', $userID, $post_id, $count );
 
-			if( !$userCanSeeOneToOne ){
+			if( !$continue ){
 				return $count;
 			}
 
@@ -825,7 +835,7 @@
 			$postID = get_the_ID();
 
 			// Now let's see if the current user should be able to see this comment
-			$userCanSeeOneToOne = Studiorum_Lectio_Utils::userCanSeeOneToOne( $userID, $postID );
+			$userCanSeeOneToOne = apply_filters( 'wp_side_comments_one_to_one_comments', true, $userID, $postID, $comment );
 
 			if( !$userCanSeeOneToOne ){
 				$output .= '';
