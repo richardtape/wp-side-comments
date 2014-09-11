@@ -743,6 +743,10 @@
 
 			$linearComments = 0;
 
+			if( !$allComments || !is_array( $allComments ) || empty( $allComments ) ){
+				return $linearComments;
+			}
+
 			foreach ($allComments as $key => $comments) {
 				if( $key == '' ){
 					$linearComments = count( $comments );
