@@ -296,6 +296,10 @@
 					$sideComment = $section;
 				}
 
+				if( !$sideComment ){
+					continue;
+				}
+
 				if( !isset( $sideCommentData[$section] ) ){
 					$sideCommentData[$section] = array();
 				}
