@@ -140,7 +140,6 @@
 			}
 
 			$classes[] = 'commentable-container';
-			$classes[] = 'container';
 
 			return $classes;
 
