@@ -142,5 +142,42 @@ jQuery(document).ready(function($) {
 		// });
 
 	});
+// Adds .active to the parent p.commentable-section of .marker when clicked
+	$( ".marker", ".side-comment" ).on('click', function() {
+
+	 	if(!$(this).parent().hasClass('active') ) {
+ 	 		$(this).parent().parent('p.commentable-section').addClass('active');
+ 	 	} else { 
+ 	 		$(this).parent().parent('p.commentable-section').removeClass('active');
+ 	 	}
+ 	});
+
+	//Removes .active from p.commentable-section when the cursor is click anywhere else but .commment-wrapper. Used to mimic same nature of side comments
+	$('#content, html').on('click', function(e) {
+		var clicked = $(e.target); // get the element clicked
+		if (clicked.is('.comments-wrapper, .marker') || clicked.parents().is('.comments-wrapper, .marker')) {
+			return; // click happened within the dialog, do nothing here
+	   } else { // click was outside the dialog, so close it
+	     $( ".commentable-section" ).removeClass( "active" );
+	   }
+	});
+
+	//When clicked browser scrolls to top of item
+	$(".marker").click(function() {
+	    $('html, body').animate({
+	        scrollTop: $(this).parent().offset().top
+	    }, 500);
+	});
+	
+	// Stops page from scrolling when mouse is hovering .comments-wrapper .comments    
+		if ($(window).width() > 767) {	
+			$( '.comments-wrapper .comments' ).bind( 'mousewheel DOMMouseScroll', function ( e ) {
+			    var e0 = e.originalEvent,
+			        delta = e0.wheelDelta || -e0.detail;
+			    
+			    this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+			    e.preventDefault();
+			});
+		}	
 
 });
