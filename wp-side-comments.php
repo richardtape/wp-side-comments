@@ -165,7 +165,7 @@
 				return $content;
 			}
 
-			$regex = '|<p>|';
+			$regex = '|(<p)[^>]*(>)|';
 
 			return preg_replace_callback( $regex, array( $this, '_addAttributesToParagraphCallback' ), $content );
 
