@@ -1,0 +1,26 @@
+{
+    "name": "pensandoodireito/wp-side-comments",
+    "type": "wordpress-plugin",
+    "description": "Implementa a funcionalidade de comentários por parágrafo ao estilo do Medium",
+    "keywords": ["plugin", "wordpress", "medium", "collaboration"],
+    "homepage": "https://github.com/pensandoodireito/wp-side-comments",
+    "license": "GPL-2.0+",
+    "authors": [
+    	  {
+            "name": "Richard Tape",
+            "email": "richard@iamfriendly.com",
+            "role": "Developer"
+        },
+        {
+            "name": "Marco Antonio Konopacki",
+            "email": "marcoamarelo@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "composer/installers": "~1.0",
+        "wordpress": ">=3.8"
+    }
+}
+
+1508
