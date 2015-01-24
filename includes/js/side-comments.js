@@ -440,6 +440,7 @@ SideComments.prototype.hideComments = function() {
   }
 
   this.$el.removeClass('side-comments-open');
+  this.$el.find('.commentable-section').removeClass('active');
 };
 
 /**
