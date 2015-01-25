@@ -395,7 +395,7 @@
 			}
 
 			// We need name, ID and avatar url
-			$name 			= ( isset( $user->user_nicename ) ) ? $user->user_nicename : $user->user_login;
+			$name 			= ( isset( $user->display_name ) ) ? $user->display_name : $user->user_login;
 
 			$avatarURL 		= static::get_avatar_url( $user->user_email );
 			$avatarURL 		= ( isset( $getAvatarUrl ) && !empty( $getAvatarUrl ) ) ? $getAvatarUrl : includes_url( 'images/blank.gif' );
