@@ -168,7 +168,7 @@ jQuery(document).ready(function($) {
 			    var e0 = e.originalEvent,
 			        delta = e0.wheelDelta || -e0.detail;
 			    
-			    this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+			    this.scrollTop += ( delta < 0 ? 1 : -1 ) * 10;
 			    e.preventDefault();
 			});
 		}	
