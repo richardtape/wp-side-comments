@@ -217,7 +217,7 @@ p.commentable-section {
 }
 
 p.commentable-section.active {
-    width: 70%;
+    width: 63%;
     margin-top: 33px;
     padding: 20px;
     border-left: 10px solid #999;
@@ -232,7 +232,7 @@ p.commentable-section.active {
 .side-comment.has-comments .comments-wrapper, .side-comment .comments-wrapper {
     padding: 15px 0 0 0;
     border: 2px solid #999;
-    width: 335px;
+    width: 385px;
     left: 17px;
     z-index: 2;
     color: #222;
@@ -248,7 +248,7 @@ p.commentable-section.active {
 }
 
 ul.comments {
-    max-height: 270px;
+    max-height: 520px;
     overflow: auto;
 }
 /***************************************

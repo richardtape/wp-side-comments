@@ -162,6 +162,13 @@ jQuery(document).ready(function($) {
 	   }
 	});
 
+	//When clicked browser scrolls to top of item
+	$(".marker").click(function() {
+	    $('html, body').animate({
+	        scrollTop: $(this).parent().offset().top
+	    }, 500);
+	});
+	
 	// Stops page from scrolling when mouse is hovering .comments-wrapper .comments    
 		if ($(window).width() > 767) {	
 			$( '.comments-wrapper .comments' ).bind( 'mousewheel DOMMouseScroll', function ( e ) {
