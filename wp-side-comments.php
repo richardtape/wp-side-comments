@@ -307,6 +307,7 @@
 					'authorAvatarUrl' => static::get_avatar_url( $commentData->comment_author_email ),
 					'authorName' => $commentData->comment_author,
 					'comment' => $commentData->comment_content,
+          'commentID' => $commentData->comment_ID,
 					'authorID' => $commentData->user_id
 				);
 
