@@ -63,7 +63,8 @@ jQuery(document).ready(function($) {
 				sectionID: 		comment.sectionId,
 				comment: 		comment.comment,
 				authorName: 	comment.authorName,
-				authorId: 		comment.authorId
+				authorId: 		comment.authorId,
+                parentID:       comment.parentID
 			},
 			success: function( response ){
 

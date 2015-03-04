@@ -820,12 +820,27 @@ Section.prototype.sectionClasses = function() {
  */
 Section.prototype.render = function() {
 	this.$el.find('.side-comment').remove();
-	$(_.template(Template, {
+	var sideCommentWrap = $(_.template(Template, {
 	  commentTemplate: CommentTemplate,
 	  comments: this.comments,
 	  sectionClasses: this.sectionClasses(),
 	  currentUser: this.currentUser
-	})).appendTo(this.$el);
+	}));
+
+    $(sideCommentWrap.find(".comments li")).each(function(key,com){
+        var currentComment = $(com);
+        
+        // Need to put the comment threaded to it's parent
+        if (currentComment.data("parent-id") != "0") {
+            var parentID = currentComment.data('parent-id'),
+                parentOfCurrentComment = $(sideCommentWrap).find("[data-comment-id='" + parentID + "']");
+            if (parentOfCurrentComment.find("ul[data-root-id='" + parentID + "']").length == 0){
+                parentOfCurrentComment.append("<ul class='comments' data-root-id='"+parentID+"'></ul>");
+            }
+            parentOfCurrentComment.find("ul[data-root-id='"+parentID+"']").append(currentComment);
+        }
+    });
+    sideCommentWrap.appendTo(this.$el);
 };
 
 /**

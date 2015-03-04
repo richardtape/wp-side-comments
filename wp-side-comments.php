@@ -308,7 +308,8 @@
 					'authorName' => $commentData->comment_author,
 					'comment' => $commentData->comment_content,
           'commentID' => $commentData->comment_ID,
-					'authorID' => $commentData->user_id
+					'authorID' => $commentData->user_id,
+          'parentID' => $commentData->comment_parent
 				);
 
 				if( $sideComment && $sideComment != '' ){
