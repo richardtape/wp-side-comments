@@ -603,7 +603,9 @@ function Section( eventPipe, $el, currentUser, comments ) {
 
 	this.$el.on(this.clickEventName, '.side-comment .marker', _.bind(this.markerClick, this));
 	this.$el.on(this.clickEventName, '.side-comment .add-comment', _.bind(this.addCommentClick, this));
+	this.$el.on(this.clickEventName, '.side-comment .add-reply', _.bind(this.addReplyClick, this));
 	this.$el.on(this.clickEventName, '.side-comment .post', _.bind(this.postCommentClick, this));
+	this.$el.on(this.clickEventName, '.side-comment .reply', _.bind(this.postCommentClick, this));
 	this.$el.on(this.clickEventName, '.side-comment .cancel', _.bind(this.cancelCommentClick, this));
 	this.$el.on(this.clickEventName, '.side-comment .delete', _.bind(this.deleteCommentClick, this));
 	this.render();
@@ -625,22 +627,40 @@ Section.prototype.markerClick = function( event ) {
 Section.prototype.addCommentClick = function( event ) {
   event.preventDefault();
   if (this.currentUser) {
-  	this.showCommentForm();
+  	this.showCommentForm("0", "");
   } else {
   	this.eventPipe.emit('addCommentAttempted');
   }
 };
 
 /**
+ * Callback for the comment button click event.
+ * @param {Object} event The event object.
+ */
+Section.prototype.addReplyClick = function( event ) {
+  event.preventDefault();
+  if (this.currentUser) {
+    var parentID = event.currentTarget.attributes["data-parent"].value;
+    var commentID = event.currentTarget.attributes["data-comment"].value;
+  	this.showCommentForm(parentID, commentID);
+  } else {
+  	this.eventPipe.emit('addCommentAttempted');//TODO
+  }
+};
+
+/**
  * Show the comment form for this section.
  */
-Section.prototype.showCommentForm = function() {
+Section.prototype.showCommentForm = function(parentID, commentID) {
+  this.hideCommentForm();
   if (this.comments.length > 0) {
-    this.$el.find('.add-comment').addClass('hide');
-    this.$el.find('.comment-form').addClass('active');
+    //this.$el.find('.add-comment').addClass('hide');
+    //this.$el.find('.comment-form').addClass('active');
+    this.$el.find('.add-comment[data-comment="'+commentID+'"]').addClass('hide');
+    this.$el.find('.comment-form[data-comment="'+commentID+'"]').addClass('active');
   }
 
-  this.focusCommentBox();
+  this.focusCommentBox(parentID, commentID);
 };
 
 /**
@@ -658,7 +678,7 @@ Section.prototype.hideCommentForm = function() {
 /**
  * Focus on the comment box in the comment form.
  */
-Section.prototype.focusCommentBox = function() {
+Section.prototype.focusCommentBox = function(parentID, commentID) {
 	this.$el.find('.comment-box').get(0).focus();
 };
 
@@ -668,13 +688,15 @@ Section.prototype.focusCommentBox = function() {
  */
 Section.prototype.cancelCommentClick = function( event ) {
   event.preventDefault();
-  this.cancelComment();
+  var parentID = event.currentTarget.attributes["data-parent"].value;
+  var commentID = event.currentTarget.attributes["data-comment"].value;
+  this.cancelComment(parentID, commentID);
 };
 
 /**
  * Cancel adding of a comment.
  */
-Section.prototype.cancelComment = function() {
+Section.prototype.cancelComment = function(parentID, commentID) {
   if (this.comments.length > 0) {
     this.hideCommentForm();
   } else {
@@ -689,24 +711,30 @@ Section.prototype.cancelComment = function() {
  */
 Section.prototype.postCommentClick = function( event ) {
   event.preventDefault();
-  this.postComment();
+  console.log(event);
+  var parentID = event.currentTarget.attributes["data-parent"].value;
+  var commentID = event.currentTarget.attributes["data-comment"].value;
+  console.log(parentID);
+  this.postComment(parentID, commentID);
 };
 
 /**
  * Post a comment to this section.
  */
-Section.prototype.postComment = function() {
-	this.$el.find(".comment-box").children().not("br").each(function() {
+Section.prototype.postComment = function(parentID, commentID) {
+	this.$el.find(".comment-box[data-parent='"+parentID+"'][data-comment='"+commentID+"']").children().not("br").each(function() {
 		$(this).replaceWith(this.innerHTML);
 	});
-  var commentBody = this.$el.find('.comment-box').html();
+  var commentBody = this.$el.find('.comment-box[data-parent="'+parentID+'"][data-comment="'+commentID+'"]').html();
   var comment = {
   	sectionId: this.id,
   	comment: commentBody,
   	authorAvatarUrl: this.currentUser.avatarUrl,
   	authorName: this.currentUser.name,
-  	authorId: this.currentUser.id
+  	authorId: this.currentUser.id,
+    parentID: commentID
   };
+  console.log(comment);
   this.eventPipe.emit('commentPosted', comment);
 };
 
@@ -779,7 +807,7 @@ Section.prototype.select = function() {
 		this.$el.find('.side-comment').addClass('active');
 
 		if (this.comments.length === 0 && this.currentUser) {
-		  this.focusCommentBox();
+		  this.focusCommentBox("0","");
 		}
 
 		this.eventPipe.emit('sectionSelected', this);

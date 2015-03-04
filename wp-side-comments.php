@@ -463,6 +463,7 @@
 			$commentText	= strip_tags( $_REQUEST['comment'], '<p><a><br>' );
 			$authorName		= sanitize_text_field( $_REQUEST['authorName'] );
 			$authorID 		= absint( $_REQUEST['authorId'] );
+			$parentID 		= absint( $_REQUEST['parentID'] );
 
 			$user = get_user_by( 'id', $authorID );
 
@@ -484,7 +485,7 @@
 				'comment_author_url' 	=> null,
 				'comment_content' 		=> $commentText,
 				'comment_type' 			=> 'side-comment',
-				'comment_parent' 		=> 0,
+				'comment_parent' 		=> $parentID,
 				'user_id' 				=> $authorID,
 				'comment_author_IP' 	=> $ip,
 				'comment_agent' 		=> $_SERVER['HTTP_USER_AGENT'],
