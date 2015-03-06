@@ -657,6 +657,7 @@ Section.prototype.showCommentForm = function(parentID, commentID) {
     //this.$el.find('.add-comment').addClass('hide');
     //this.$el.find('.comment-form').addClass('active');
     this.$el.find('.add-comment[data-comment="'+commentID+'"]').addClass('hide');
+    this.$el.find('.add-reply[data-comment="'+commentID+'"]').addClass('hide');
     this.$el.find('.comment-form[data-comment="'+commentID+'"]').addClass('active');
   }
 
@@ -669,10 +670,11 @@ Section.prototype.showCommentForm = function(parentID, commentID) {
 Section.prototype.hideCommentForm = function() {
   if (this.comments.length > 0) {
     this.$el.find('.add-comment').removeClass('hide');
+    this.$el.find('.add-reply').removeClass('hide');
     this.$el.find('.comment-form').removeClass('active');
   }
 
-  this.$el.find('.comment-box').empty();
+  this.$el.find('.comment-box:not(.register-login)').empty();
 };
 
 /**
