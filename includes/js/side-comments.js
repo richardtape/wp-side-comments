@@ -681,7 +681,11 @@ Section.prototype.hideCommentForm = function() {
  * Focus on the comment box in the comment form.
  */
 Section.prototype.focusCommentBox = function(parentID, commentID) {
-	this.$el.find('.comment-box').get(0).focus();
+	if (this.$el.find('.comment-box[data-comment="'+commentID+'"]').length > 0) {
+        this.$el.find('.comment-box[data-comment="'+commentID+'"]').get(0).focus();
+    } else {
+        this.$el.find('.comment-box').get(-1).focus();
+    }
 };
 
 /**
@@ -713,10 +717,8 @@ Section.prototype.cancelComment = function(parentID, commentID) {
  */
 Section.prototype.postCommentClick = function( event ) {
   event.preventDefault();
-  console.log(event);
   var parentID = event.currentTarget.attributes["data-parent"].value;
   var commentID = event.currentTarget.attributes["data-comment"].value;
-  console.log(parentID);
   this.postComment(parentID, commentID);
 };
 
@@ -736,7 +738,6 @@ Section.prototype.postComment = function(parentID, commentID) {
   	authorId: this.currentUser.id,
     parentID: commentID
   };
-  console.log(comment);
   this.eventPipe.emit('commentPosted', comment);
 };
 
@@ -750,7 +751,16 @@ Section.prototype.insertComment = function( comment ) {
 		comment: comment,
 		currentUser: this.currentUser
 	});
-	this.$el.find('.comments').append(newCommentHtml);
+    if (comment.parentID != "0") {
+        var parentID = comment.parentID,
+            parentOfCurrent = this.$el.find('[data-comment-id="'+parentID+'"]');
+            if (parentOfCurrent.find('ul[data-root-id="'+parentID+'"]').length == 0) {
+                parentOfCurrent.append('<ul class="comments" data-root-id="'+parentID+'"></ul>');
+            }
+            parentOfCurrent.find('ul[data-root-id="'+parentID+'"]').append(newCommentHtml);
+    } else {
+	    this.$el.find('.comments').append(newCommentHtml);
+    }
 	this.$el.find('.side-comment').addClass('has-comments');
 	this.updateCommentCount();
 	this.hideCommentForm();
