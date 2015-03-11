@@ -654,8 +654,6 @@ Section.prototype.addReplyClick = function( event ) {
 Section.prototype.showCommentForm = function(parentID, commentID) {
   this.hideCommentForm();
   if (this.comments.length > 0) {
-    //this.$el.find('.add-comment').addClass('hide');
-    //this.$el.find('.comment-form').addClass('active');
     this.$el.find('.add-comment[data-comment="'+commentID+'"]').addClass('hide');
     this.$el.find('.add-reply[data-comment="'+commentID+'"]').addClass('hide');
     this.$el.find('.comment-form[data-comment="'+commentID+'"]').addClass('active');
@@ -681,10 +679,10 @@ Section.prototype.hideCommentForm = function() {
  * Focus on the comment box in the comment form.
  */
 Section.prototype.focusCommentBox = function(parentID, commentID) {
-	if (this.$el.find('.comment-box[data-comment="'+commentID+'"]').length > 0) {
+	if (this.$el.find('.comment-box[data-comment="'+commentID+'"]').length > 0 && commentID != "") {
         this.$el.find('.comment-box[data-comment="'+commentID+'"]').get(0).focus();
     } else {
-        this.$el.find('.comment-box').get(-1).focus();
+        this.$el.find('.comment-form[data-parent="0"][data-comment=""] .comment-box').get(0).focus();
     }
 };
 
@@ -726,10 +724,19 @@ Section.prototype.postCommentClick = function( event ) {
  * Post a comment to this section.
  */
 Section.prototype.postComment = function(parentID, commentID) {
-	this.$el.find(".comment-box[data-parent='"+parentID+"'][data-comment='"+commentID+"']").children().not("br").each(function() {
-		$(this).replaceWith(this.innerHTML);
-	});
-  var commentBody = this.$el.find('.comment-box[data-parent="'+parentID+'"][data-comment="'+commentID+'"]').html();
+    var commentBody = "";
+    if (commentID != "") {
+	    this.$el.find(".comment-box[data-parent='"+parentID+"'][data-comment='"+commentID+"']").children().not("br").each(function() {
+		    $(this).relaceWith(this.innerHTML);
+	    });
+        commentBody = this.$el.find('.comment-box[data-parent="'+parentID+'"][data-comment="'+commentID+'"]').html();
+    } else {
+	    this.$el.find('.comment-form[data-parent="0"][data-comment=""] .comment-box').children().not("br").each(function() {
+		    $(this).relaceWith(this.innerHTML);
+	    });
+        commentBody = this.$el.find('.comment-form[data-parent="0"][data-comment=""] .comment-box').html();
+    }
+    if (commentID == "") commentID = 0;
   var comment = {
   	sectionId: this.id,
   	comment: commentBody,
@@ -752,14 +759,17 @@ Section.prototype.insertComment = function( comment ) {
 		currentUser: this.currentUser
 	});
     if (comment.parentID != "0") {
+        console.log("if");
         var parentID = comment.parentID,
             parentOfCurrent = this.$el.find('[data-comment-id="'+parentID+'"]');
-            if (parentOfCurrent.find('ul[data-root-id="'+parentID+'"]').length == 0) {
-                parentOfCurrent.append('<ul class="comments" data-root-id="'+parentID+'"></ul>');
-            }
-            parentOfCurrent.find('ul[data-root-id="'+parentID+'"]').append(newCommentHtml);
+        if (parentOfCurrent.find('ul[data-root-id="'+parentID+'"]').length == 0) {
+            parentOfCurrent.append('<ul class="comments" data-root-id="'+parentID+'"></ul>');
+        }
+        parentOfCurrent.find('ul[data-root-id="'+parentID+'"]').append(newCommentHtml);
     } else {
-	    this.$el.find('.comments').append(newCommentHtml);
+        console.log("else");
+        console.log(this.$el.find('.comments[data-root-id="0"]'));
+	    this.$el.find('.comments[data-root-id="0"]').append(newCommentHtml);
     }
 	this.$el.find('.side-comment').addClass('has-comments');
 	this.updateCommentCount();
@@ -3293,12 +3303,65 @@ module.exports = function() {
 }
 });
 
-require.register("side-comments/templates/section.html", function(exports, require, module){
-module.exports = '<div class="side-comment <%= sectionClasses %>">\n  <a href="#" class="marker">\n    <span><%= comments.length %></span>\n  </a>\n  \n  <div class="comments-wrapper">\n    <ul class="comments">\n      <% _.each(comments, function( comment ){ %>\n        <%= _.template(commentTemplate, { comment: comment, currentUser: currentUser }) %>\n      <% }) %>\n    </ul>\n    \n    <a href="#" class="add-comment">Leave a comment</a>\n    \n    <% if (currentUser){ %>\n      <div class="comment-form">\n        <div class="author-avatar">\n          <img src="<%= currentUser.avatarUrl %>">\n        </div>\n        <p class="author-name">\n          <%= currentUser.name %>\n        </p>\n        <div class="comment-box right-of-avatar" contenteditable="true" data-placeholder-content="Leave a comment..."></div>\n        <div class="actions right-of-avatar">\n          <a href="#" class="action-link post">Post</a>\n          <a href="#" class="action-link cancel">Cancel</a>\n        </div>\n      </div>\n    <% } %>\n  </div>\n</div>';
+
+require.register("side-comments/templates/section.html", function (exports, require, module) {
+    module.exports = '<div class="side-comment <%= sectionClasses %>">\n  ' +
+        '                           <a href="#" class="marker">\n    <span><%= comments.length %></span>\n  </a>\n  \n  ' +
+        '                   <div class="comments-wrapper">\n    ' +
+        '                       <i class="fa fa-times" onClick="document.body.click();"></i>' +
+        '                   <ul class="comments" data-root-id="0">\n      ' +
+        '                           <% _.each(comments, function( comment ){ %>\n        ' +
+        '                               <%= _.template(commentTemplate, { comment: comment, currentUser: currentUser }) %>\n      ' +
+        '                           <% }) %>\n    ' +
+        '                   </ul>\n    \n    ' +
+        '                       <a href="#" class="add-comment" data-parent="0" data-comment="">Leave a comment</a>\n    \n  ' +
+        '                           <% if (currentUser){ %>\n     ' +
+        '                                <div class="comment-form" data-parent="0" data-comment="">\n        ' +
+        '                           <div class="author-avatar">\n          ' +
+        '                           <img src="<%= currentUser.avatarUrl %>">\n        ' +
+        '                       </div>\n        ' +
+        '                               <p class="author-name">\n          <%= currentUser.name %>\n        </p>\n        ' +
+        '                               <div class="comment-box right-of-avatar" contenteditable="true" data-placeholder-content="Leave a comment...">' +
+        '                                   </div>\n        ' +
+        '                       <div class="actions right-of-avatar">\n          ' +
+        '                           <a href="#" class="action-link post" data-parent="0" data-comment="">Post</a>\n          ' +
+        '                           <a href="#" class="action-link cancel" data-parent="0" data-comment="">Cancel</a>\n        ' +
+        '                       </div>\n      ' +
+        '                                   </div>\n    ' +
+        '                           <% } %>' +
+        '                   </div>\n' +
+        '                       </div>';
 });
-require.register("side-comments/templates/comment.html", function(exports, require, module){
-module.exports = '<li data-comment-id="<%= comment.id %>">\n  <div class="author-avatar">\n    <img src="<%= comment.authorAvatarUrl %>">\n  </div>\n  <p class="author-name right-of-avatar">\n    <%= comment.authorName %>\n  </p>\n  <p class="comment right-of-avatar">\n    <%= comment.comment %>\n  </p>\n  <% if (currentUser && comment.authorId === currentUser.id){ %>\n  <a href="#" class="action-link delete">Delete</a>\n  <% } %>\n</li>';
+
+require.register("side-comments/templates/comment.html", function (exports, require, module) {
+    module.exports = '<li data-comment-id="<%= comment.commentID %>" data-parent-id="<%= comment.parentID%>">\n  ' +
+        '                   <div class="author-avatar">\n  ' +
+        '                       <img src="<%= comment.authorAvatarUrl %>">\n  ' +
+        '                   </div>\n  ' +
+        '                       <p class="author-name right-of-avatar">\n    <%= comment.authorName %>\n  </p>\n  ' +
+        '                       <p class="comment right-of-avatar">\n    <%= comment.comment %>\n  </p>\n  ' + 
+        '                       <a href="#" class="add-reply" data-parent="<%= comment.parentID%>" data-comment="<%= comment.commentID %>">Reply</a>\n    \n  ' +
+        '                           <% if (currentUser){ %>\n     ' +
+        '                                <div class="comment-form" data-parent="<%= comment.parentID%>" data-comment="<%= comment.commentID %>">\n        ' +
+        '                           <div class="author-avatar">\n          ' +
+        '                           <img src="<%= currentUser.avatarUrl %>">\n        ' +
+        '                       </div>\n        ' +
+        '                               <p class="author-name">\n          <%= currentUser.name %>\n        </p>\n        ' +
+        '                               <div class="comment-box right-of-avatar" contenteditable="true" data-parent="<%= comment.parentID%>" data-comment="<%= comment.commentID %>" data-placeholder-content="Reply...">' +
+        '                                   </div>\n        ' +
+        '                       <div class="actions right-of-avatar">\n          ' +
+        '                           <a href="#" class="action-link reply" data-parent="<%= comment.parentID %>" data-comment="<%= comment.commentID %>">Post</a>\n          ' +
+        '                           <a href="#" class="action-link cancel" data-parent="<%= comment.parentID %>" data-comment="<%= comment.commentID %>">Cancel</a>\n        ' +
+        '                       </div>\n      ' +
+        '                                   </div>\n    ' +
+        '                           <% } %>' +
+        '                       <% if (currentUser && comment.authorId === currentUser.id){ %>\n  ' +
+        '                           <a href="#" class="action-link delete">Delete</a>\n  ' +
+        '                       <% } %>\n' +
+        '                   </li>'; 
 });
+
+
 require.alias("component-emitter/index.js", "side-comments/deps/emitter/index.js");
 require.alias("component-emitter/index.js", "emitter/index.js");
 

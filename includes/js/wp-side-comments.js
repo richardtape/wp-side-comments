@@ -73,6 +73,7 @@ jQuery(document).ready(function($) {
 					// OK, we can insert it into the stream
 					comment.id = response.newCommentID;
 					newCommentID = response.newCommentID;
+                    comment.commentID = comment.id;
 
 					// We'll need this if we want to delete the comment.
 					var newComment = sideComments.insertComment( comment );
