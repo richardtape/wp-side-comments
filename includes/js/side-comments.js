@@ -766,10 +766,12 @@ Section.prototype.insertComment = function( comment ) {
         }
         parentOfCurrent.find('ul[data-root-id="'+parentID+'"]').append(newCommentHtml);
     } else {
-        console.log("else");
-        console.log(this.$el.find('.comments[data-root-id="0"]'));
 	    this.$el.find('.comments[data-root-id="0"]').append(newCommentHtml);
     }
+    //visual feedback for the users
+    //    first move the screen to the comment
+    $('li[data-comment-id="'+comment.commentID+'"]').parent().scrollTop($('li[data-comment-id="'+comment.commentID+'"]').parent().height() + $('li[data-comment-id="'+comment.commentID+'"]').parent().scrollTop());
+    //    then fadeIn the comment.
     $('li[data-comment-id="'+comment.commentID+'"]').hide().fadeIn(2000);
 	this.$el.find('.side-comment').addClass('has-comments');
 	this.updateCommentCount();
