@@ -759,7 +759,6 @@ Section.prototype.insertComment = function( comment ) {
 		currentUser: this.currentUser
 	});
     if (comment.parentID != "0") {
-        console.log("if");
         var parentID = comment.parentID,
             parentOfCurrent = this.$el.find('[data-comment-id="'+parentID+'"]');
         if (parentOfCurrent.find('ul[data-root-id="'+parentID+'"]').length == 0) {
@@ -771,6 +770,7 @@ Section.prototype.insertComment = function( comment ) {
         console.log(this.$el.find('.comments[data-root-id="0"]'));
 	    this.$el.find('.comments[data-root-id="0"]').append(newCommentHtml);
     }
+    $('li[data-comment-id="'+comment.commentID+'"]').hide().fadeIn(2000);
 	this.$el.find('.side-comment').addClass('has-comments');
 	this.updateCommentCount();
 	this.hideCommentForm();
