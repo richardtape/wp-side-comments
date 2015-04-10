@@ -602,6 +602,7 @@ function Section( eventPipe, $el, currentUser, comments ) {
 	this.id = $el.data('section-id');
 
 	this.$el.on(this.clickEventName, '.side-comment .marker', _.bind(this.markerClick, this));
+        this.$el.on(this.clickEventName, _.bind(this.markerClick, this));
 	this.$el.on(this.clickEventName, '.side-comment .add-comment', _.bind(this.addCommentClick, this));
 	this.$el.on(this.clickEventName, '.side-comment .add-reply', _.bind(this.addReplyClick, this));
 	this.$el.on(this.clickEventName, '.side-comment .post', _.bind(this.postCommentClick, this));
