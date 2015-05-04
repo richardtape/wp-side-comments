@@ -382,7 +382,7 @@ var eventPipe = new Emitter;
  *                                  or not.
  * @param {Array} existingComments An array of existing comments, in
  *                                 the proper structure.
- * 
+ *
  * TODO: **GIVE EXAMPLE OF STRUCTURE HERE***
  */
 function SideComments( el, currentUser, existingComments ) {
@@ -394,7 +394,7 @@ function SideComments( el, currentUser, existingComments ) {
   this.existingComments = _.cloneDeep(existingComments) || [];
   this.sections = [];
   this.activeSection = null;
-  
+
   // Event bindings
   this.eventPipe.on('showComments', _.bind(this.showComments, this));
   this.eventPipe.on('hideComments', _.bind(this.hideComments, this));
@@ -453,7 +453,7 @@ SideComments.prototype.sectionSelected = function( section ) {
   if (this.activeSection) {
     this.activeSection.deselect();
   }
-  
+
   this.activeSection = section;
 };
 
@@ -533,9 +533,9 @@ SideComments.prototype.commentsAreVisible = function() {
  */
 SideComments.prototype.bodyClick = function( event ) {
   var $target = $(event.target);
-  
+
   // We do a check on $('body') existing here because if the $target has
-  // no parent body then it's because it belongs to a deleted comment and 
+  // no parent body then it's because it belongs to a deleted comment and
   // we should NOT hide the SideComments.
   if ($target.closest('.side-comment').length < 1 && $target.closest('body').length > 0) {
     if (this.activeSection) {
@@ -598,11 +598,11 @@ function Section( eventPipe, $el, currentUser, comments ) {
 	this.comments = comments ? comments.comments : [];
 	this.currentUser = currentUser || null;
 	this.clickEventName = mobileCheck() ? 'touchstart' : 'click';
-	
+
 	this.id = $el.data('section-id');
 
 	this.$el.on(this.clickEventName, '.side-comment .marker', _.bind(this.markerClick, this));
-        this.$el.on(this.clickEventName, _.bind(this.markerClick, this));
+    this.$el.on(this.clickEventName, _.bind(this.markerClick, this));
 	this.$el.on(this.clickEventName, '.side-comment .add-comment', _.bind(this.addCommentClick, this));
 	this.$el.on(this.clickEventName, '.side-comment .add-reply', _.bind(this.addReplyClick, this));
 	this.$el.on(this.clickEventName, '.side-comment .post', _.bind(this.postCommentClick, this));
@@ -618,7 +618,12 @@ function Section( eventPipe, $el, currentUser, comments ) {
  */
 Section.prototype.markerClick = function( event ) {
 	event.preventDefault();
-	this.select();
+
+    var com_sec = jQuery(event.target).parents('.commentable-section:first');
+
+    if (com_sec.find('.active').length == 0 && !jQuery(event.target).hasClass('fa-times')) {
+	    this.select();
+    }
 };
 
 /**
@@ -755,7 +760,7 @@ Section.prototype.postComment = function(parentID, commentID) {
  */
 Section.prototype.insertComment = function( comment ) {
 	this.comments.push(comment);
-	var newCommentHtml = _.template(CommentTemplate, { 
+	var newCommentHtml = _.template(CommentTemplate, {
 		comment: comment,
 		currentUser: this.currentUser
 	});
@@ -882,7 +887,7 @@ Section.prototype.render = function() {
 
     $(sideCommentWrap.find(".comments li")).each(function(key,com){
         var currentComment = $(com);
-        
+
         // Need to put the comment threaded to it's parent
         if (currentComment.data("parent-id") != "0") {
             var parentID = currentComment.data('parent-id'),
@@ -3342,7 +3347,7 @@ require.register("side-comments/templates/comment.html", function (exports, requ
         '                       <img src="<%= comment.authorAvatarUrl %>">\n  ' +
         '                   </div>\n  ' +
         '                       <p class="author-name right-of-avatar">\n    <%= comment.authorName %>\n  </p>\n  ' +
-        '                       <p class="comment right-of-avatar">\n    <%= comment.comment %>\n  </p>\n  ' + 
+        '                       <p class="comment right-of-avatar">\n    <%= comment.comment %>\n  </p>\n  ' +
         '                       <a href="#" class="add-reply" data-parent="<%= comment.parentID%>" data-comment="<%= comment.commentID %>">Reply</a>\n    \n  ' +
         '                           <% if (currentUser){ %>\n     ' +
         '                                <div class="comment-form" data-parent="<%= comment.parentID%>" data-comment="<%= comment.commentID %>">\n        ' +
@@ -3361,7 +3366,7 @@ require.register("side-comments/templates/comment.html", function (exports, requ
         '                       <% if (currentUser && comment.authorId === currentUser.id){ %>\n  ' +
         '                           <a href="#" class="action-link delete">Delete</a>\n  ' +
         '                       <% } %>\n' +
-        '                   </li>'; 
+        '                   </li>';
 });
 
 
