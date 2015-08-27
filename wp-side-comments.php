@@ -15,9 +15,16 @@
 
 	define( 'CTLT_WP_SIDE_COMMENTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
+    //includes required classes for comment voting
+    require_once plugin_dir_path(__FILE__) . 'classes/class-visitor.php';
 
 	class CTLT_WP_Side_Comments
 	{
+
+        /**
+         * @var WP_Side_Comments_Visitor
+         */
+        protected $visitor;
 
 		/**
 		 * Set up our actions and filters
@@ -54,7 +61,10 @@
 			// When side comments are removed, the totals are wrong on the front-end
 			add_filter( 'get_comments_number', array( $this, 'get_comments_number__adjustCommentsNumberToRemoveSidecomments' ), 10, 2 );
 
-		}/* __construct() */
+            //Set up AJAX handlers for comment voting
+            add_action('wp_ajax_comment_vote_callback', array($this, 'comment_vote_callback'));
+            add_action('wp_ajax_nopriv_comment_vote_callback', array($this, 'comment_vote_callback'));
+        }/* __construct() */
 
 
 		/**
@@ -101,7 +111,10 @@
 			// ENsure we have a nonce for AJAX purposes
 			$data['nonce'] = wp_create_nonce( 'side_comments_nonce' );
 
-			// We also need the admin url as we need to send an AJAX request to it
+            //create a nonce for Comment Voting
+            $data['voting_nonce'] = wp_create_nonce( 'side_comments_voting_nonce' );
+
+            // We also need the admin url as we need to send an AJAX request to it
 			// ToDo: fix this, as we need this to not be https for it to work atm
 			$adminAjaxURL = admin_url( 'admin-ajax.php' );
 			$nonHTTPS = preg_replace( '/^https(?=:\/\/)/i', 'http', $adminAjaxURL );
@@ -304,13 +317,14 @@
 				}
 
 				$toAdd = array(
-					'authorAvatarUrl' => static::get_avatar_url( $commentData->comment_author_email ),
-					'authorName' => $commentData->comment_author,
-					'comment' => $commentData->comment_content,
-          'commentID' => $commentData->comment_ID,
-					'authorID' => $commentData->user_id,
-          'parentID' => $commentData->comment_parent
-				);
+                    'authorAvatarUrl' => static::get_avatar_url($commentData->comment_author_email),
+                    'authorName' => $commentData->comment_author,
+                    'comment' => $commentData->comment_content,
+                    'commentID' => $commentData->comment_ID,
+                    'authorID' => $commentData->user_id,
+                    'parentID' => $commentData->comment_parent,
+                    'karma' => $commentData->comment_karma
+                );
 
 				if( $sideComment && $sideComment != '' ){
 					$toAdd['sideComment'] = $section;
@@ -763,10 +777,184 @@
 
 		}/* get_comments_number__adjustCommentsNumberToRemoveSidecomments() */
 
-	}/* class CTLT_WP_Side_Comments */
+        /**
+         * Ajax handler for the vote action.
+         */
+        public function comment_vote_callback()
+        {
+            check_ajax_referer('side_comments_voting_nonce', 'vote_nonce');
 
-	global $CTLT_WP_Side_Comments;
-	$CTLT_WP_Side_Comments = new CTLT_WP_Side_Comments();
+            $commentID = absint($_POST['comment_id']);
+            $vote = $_POST['vote'];
+
+            if (!in_array($vote, array('upvote', 'downvote'))) {
+                $return = array(
+                    'error_code' => 'invalid_action',
+                    'error_message' => 'Ação inválida',
+                    'comment_id' => $commentID,
+                );
+
+                wp_send_json_error($return);
+            }
+
+            $result = $this->commentVote($this->visitor->getId(), $commentID, $vote);
+
+            if (array_key_exists('error_message', $result)) {
+                wp_send_json_error($result);
+            } else {
+                wp_send_json_success($result);
+            }
+        }
+
+        /**
+         * Processes the comment vote logic.
+         *
+         * @param $vote
+         * @param $commentID
+         *
+         * @param $userID
+         *
+         * @return array
+         */
+        public function commentVote($userID, $commentID, $vote)
+        {
+
+            $labels = $this->getVoteLabels();
+
+            $voteIsValid = $this->getVisitor()->isVoteValid($commentID, $labels[$vote]);
+
+            if (is_wp_error($voteIsValid)) {
+
+                $errorCode = $voteIsValid->get_error_code();
+                $errorMsg = $voteIsValid->get_error_message($errorCode);
+
+                $return = array(
+                    'error_code' => $errorCode,
+                    'error_message' => $errorMsg,
+                    'comment_id' => $commentID,
+                );
+
+                return $return;
+
+            }
+
+            $commentKarma = $this->updateCommentKarma($commentID, $this->getVoteValue($vote));
+
+            $this->getVisitor()->logVote($commentID, $vote);
+
+            do_action('hmn_cp_comment_vote', $userID, $commentID, $labels[$vote]);
+
+            $return = array(
+                'success_message' => 'Obrigado pelo seu voto!',
+                'weight' => $commentKarma,
+                'comment_id' => $commentID,
+            );
+
+            return $return;
+        }
+
+        /**
+         * @return array
+         */
+        public function getVoteLabels()
+        {
+            return array(
+                'upvote' => 'concordar',
+                'downvote' => 'discordar',
+            );
+        }
+
+        /**
+         * @return WP_Side_Comments_Visitor
+         */
+        public function getVisitor()
+        {
+            return $this->visitor;
+        }
+
+        /**
+         * Initialize the visitor object.
+         *
+         * @param WP_Side_Comments_Visitor $visitor
+         */
+        public function setVisitor($visitor)
+        {
+            $this->visitor = $visitor;
+        }
+
+        /**
+         * Updates the comment weight value in the database.
+         *
+         * @param $vote
+         * @param $commentID
+         *
+         * @return int
+         */
+        public function updateCommentKarma($commentID, $voteValue)
+        {
+
+            $comment = get_comment($commentID, ARRAY_A);
+
+            //TODO: vamos permitir numeros negativos?
+            $comment['comment_karma'] += $voteValue;
+
+            wp_update_comment($comment);
+
+            $comment = get_comment($commentID, ARRAY_A);
+
+            /**
+             * Fires once a comment has been updated.
+             *
+             * @param array $comment The comment data array.
+             */
+            do_action('wp_side_comments_update_comment_weight', $comment);
+
+            return $comment['comment_karma'];
+        }
+
+        /**
+         * Returns the value of an upvote or downvote.
+         *
+         * @param $type ( 'upvote' or 'downvote' )
+         *
+         * @return int|mixed|void
+         */
+        public function getVoteValue($type)
+        {
+            switch ($type) {
+                case 'upvote':
+                    $value = apply_filters('wp_side_comments_upvote_value', 1);
+                    break;
+                case 'downvote':
+                    $value = apply_filters('wp_side_comments_downvote_value', -1);
+                    break;
+                default:
+                    $value = new \WP_Error('invalid_vote_type', 'Tipo de voto inválido');
+                    break;
+            }
+
+            return $value;
+        }
+    }/* class CTLT_WP_Side_Comments */
+
+function wp_side_comments_init()
+{
+    global $CTLT_WP_Side_Comments;
+    $CTLT_WP_Side_Comments = new CTLT_WP_Side_Comments();
+
+    //TODO: vamos bloquear os votos de usuários não logados?
+    if (is_user_logged_in()) {
+        $visitor = new WP_Side_Comments_Visitor_Member(get_current_user_id());
+    } else {
+        $visitor = new WP_Side_Comments_Visitor_Guest($_SERVER['REMOTE_ADDR']);
+    }
+
+    if (!($CTLT_WP_Side_Comments->getVisitor() instanceof WP_Side_Comments_Visitor)) {
+        $CTLT_WP_Side_Comments->setVisitor($visitor);
+    }
+}
+
+add_action('plugins_loaded', 'wp_side_comments_init');
 
 
 	/**
