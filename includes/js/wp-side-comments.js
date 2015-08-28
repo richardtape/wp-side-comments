@@ -216,6 +216,7 @@ jQuery(document).ready(function($) {
 				} else {
 					// update karma
 					$('#comment-weight-value-' + data.data.comment_id).text(data.data.weight);
+					$('#comment-'+value+'-value-' + data.data.comment_id).text(data.data.full_karma);
 					console.log(data.data.success_message);
 				}
 

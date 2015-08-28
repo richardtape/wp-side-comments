@@ -316,15 +316,20 @@
 					$sideCommentData[$section] = array();
 				}
 
+				$upvotes = get_comment_meta($commentData->comment_ID, WP_Side_Comments_Visitor::KEY_PREFIX . '_upvote', true) ?: 0;
+				$downvotes = get_comment_meta($commentData->comment_ID, WP_Side_Comments_Visitor::KEY_PREFIX . '_downvote', true) ?: 0;
+
 				$toAdd = array(
-                    'authorAvatarUrl' => static::get_avatar_url($commentData->comment_author_email),
-                    'authorName' => $commentData->comment_author,
-                    'comment' => $commentData->comment_content,
-                    'commentID' => $commentData->comment_ID,
-                    'authorID' => $commentData->user_id,
-                    'parentID' => $commentData->comment_parent,
-                    'karma' => $commentData->comment_karma
-                );
+					'authorAvatarUrl' => static::get_avatar_url($commentData->comment_author_email),
+					'authorName' => $commentData->comment_author,
+					'comment' => $commentData->comment_content,
+					'commentID' => $commentData->comment_ID,
+					'authorID' => $commentData->user_id,
+					'parentID' => $commentData->comment_parent,
+					'karma' => $commentData->comment_karma,
+					'upvotes' => $upvotes,
+					'downvotes' => $downvotes
+				);
 
 				if( $sideComment && $sideComment != '' ){
 					$toAdd['sideComment'] = $section;
@@ -839,7 +844,7 @@
             }
 
             $commentKarma = $this->updateCommentKarma($commentID, $this->getVoteValue($vote));
-
+			$fullKarma = $this->updateFullKarma($commentID, $vote);
             $this->getVisitor()->logVote($commentID, $vote);
 
             do_action('hmn_cp_comment_vote', $userID, $commentID, $labels[$vote]);
@@ -847,7 +852,8 @@
             $return = array(
                 'success_message' => 'Obrigado pelo seu voto!',
                 'weight' => $commentKarma,
-                'comment_id' => $commentID,
+				'full_karma' => $fullKarma,
+                'comment_id' => $commentID
             );
 
             return $return;
@@ -895,7 +901,6 @@
 
             $comment = get_comment($commentID, ARRAY_A);
 
-            //TODO: vamos permitir numeros negativos?
             $comment['comment_karma'] += $voteValue;
 
             wp_update_comment($comment);
@@ -912,7 +917,26 @@
             return $comment['comment_karma'];
         }
 
-        /**
+		/**
+		 * Register the full count of upvote/downvote
+		 * @param $commentID
+		 * @param $vote
+		 */
+		public function updateFullKarma($commentID, $vote)
+		{
+			$karma = get_comment_meta($commentID, WP_Side_Comments_Visitor::KEY_PREFIX . '_' . $vote, true);
+			if ($karma) {
+				$karma++;
+			} else {
+				$karma = 1;
+			}
+
+			update_comment_meta($commentID, WP_Side_Comments_Visitor::KEY_PREFIX . '_' . $vote, $karma);
+
+			return $karma;
+		}
+
+		/**
          * Returns the value of an upvote or downvote.
          *
          * @param $type ( 'upvote' or 'downvote' )
