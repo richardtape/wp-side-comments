@@ -111,6 +111,17 @@
 .side-comment.active .comments-wrapper {
   display: block;
 }
+
+/*sobrescreva esse seletor se quiser customizar a exibição da votação dos comentários*/
+.side-comment .comment-weight-container{
+  display: inline-block;
+}
+
+/*sobrescreva esse seletor se quiser customizar a exibição da votação dos comentários*/
+.commentable-container .commentable-section .side-comment .comment-weight-container span{
+  display: inline;
+}
+
 @media (max-width: 768px) {
   body {
     -webkit-overflow-scrolling: touch;

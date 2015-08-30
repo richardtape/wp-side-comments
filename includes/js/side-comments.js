@@ -3347,12 +3347,12 @@ require.register("side-comments/templates/comment.html", function (exports, requ
         '                       <img src="<%= comment.authorAvatarUrl %>">\n  ' +
         '                   </div>\n  ' +
         '                   <p class="author-name right-of-avatar">\n<%= comment.authorName %>\n</p>\n  ' +
-        '                   <div class="comment-weight-container">\n' +
-        '                       <span><a data-comment-id="<%= comment.commentID %>" class="vote-up" href="#">+</a></span>\n ' +
-        '                       <span id="comment-weight-value-<%= comment.commentID %>"><%= comment.karma %></span>\n ' +
-        '                       <span><a data-comment-id="<%= comment.commentID %>" class="vote-down" href="#">-</a></span>\n ' +
-        '                       <span>Concordo [<span id="comment-upvote-value-<%= comment.commentID %>"><%= comment.upvotes %></span>]</span>\n ' +
-        '                       <span>Discordo [<span id="comment-downvote-value-<%= comment.commentID %>"><%= comment.downvotes %></span>]</span>\n ' +
+        '                   <div class="comment-weight-container" style="display: inline-block;">\n' +
+        '                       <span style="display: inline;"><a data-comment-id="<%= comment.commentID %>" class="vote-up" href="#">?</a></span>\n ' +
+        '                       <span style="display: inline;" id="comment-weight-value-<%= comment.commentID %>"><%= comment.karma %></span>\n ' +
+        '                       <span style="display: inline;"><a data-comment-id="<%= comment.commentID %>" class="vote-down" href="#">?</a></span>\n ' +
+        '                       <span style="display: inline-block;">Concordo [<span style="display: inline;" id="comment-upvote-value-<%= comment.commentID %>"><%= comment.upvotes %></span>]</span>\n ' +
+        '                       <span style="display: inline-block;">Discordo [<span style="display: inline;" id="comment-downvote-value-<%= comment.commentID %>"><%= comment.downvotes %></span>]</span>\n ' +
         '                   </div>\n ' +
         '                       <p class="comment right-of-avatar">\n    <%= comment.comment %>\n  </p>\n  ' +
         '                       <a href="#" class="add-reply" data-parent="<%= comment.parentID%>" data-comment="<%= comment.commentID %>">Reply</a>\n    \n  ' +
