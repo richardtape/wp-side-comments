@@ -19,6 +19,8 @@
 	class CTLT_WP_Side_Comments
 	{
 
+        static $nextSectionId;
+
 		/**
 		 * Set up our actions and filters
 		 *
@@ -37,8 +39,11 @@
 			// Add a filter to the post container
 			add_filter( 'post_class', array( $this, 'post_class__addSideCommentsClassToContainer' ) );
 
-			// Filter the_content to add our specific inline classes
-			add_filter( 'the_content', array( $this, 'the_content__addSideCommentsClassesToContent' ) );
+            // Add p tag to the content before add side comment classes
+            add_filter('content_save_pre', 'wpautop');
+
+            // Filter content_save_pre to add our specific inline classes
+            add_filter('content_save_pre', array($this, 'addSideCommentsClassesToContent'));
 
 			// Set up AJAX handlers for the create a new comment action
 			add_action( 'wp_ajax_add_side_comment', array( $this, 'wp_ajax_add_side_comment__AJAXHandler' ) );
@@ -146,51 +151,92 @@
 		}/* post_class__addSideCommentsClassToContainer() */
 
 
-		/**
-		 * Add our required classes and attributes to paragraph tags in the_content
-		 *
-		 * @since 0.1
-		 *
-		 * @param string $content the post content
-		 * @return string $content modified post content with our classes/attributes
-		 */
+        /**
+         * calculates the next section id value based on existent values
+         * @param $section
+         */
+        private function calcNextSectionId($section)
+        {
+            $sectionNumber = filter_var($section->getAttribute('data-section-id'), FILTER_SANITIZE_NUMBER_INT);
+            if ($sectionNumber >= self::$nextSectionId) {
+                self::$nextSectionId = $sectionNumber + 1;
+            }
+        }
 
-		public function the_content__addSideCommentsClassesToContent( $content )
-		{
+        /**
+         * Add our required classes and attributes to paragraph tags in the_content
+         *
+         * @since 0.1
+         *
+         * @param string $content the post content
+         * @return string $content modified post content with our classes/attributes
+         */
+        public function addSideCommentsClassesToContent($content)
+        {
+            if ($this->get_current_post_type() == "texto-em-debate" && $content) {
+                $content = str_replace("\\\"", '"', $content);
+                $dom = new DOMDocument();
+                $dom->loadHTML(mb_convert_encoding($content, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+                $elements = $dom->getElementsByTagName('p');
 
-			// Ensure we're on a post where we want to load our scripts/styles
-			$validScreen = $this->weAreOnAValidScreen();
+                foreach ($elements as $key => $element) {
+                    if ($element->hasAttribute('data-section-id')) {
+                        $this->calcNextSectionId($element);
+                    }
+                }
 
-			if( !$validScreen ){
-				return $content;
-			}
+                foreach ($elements as $element) {
+                    if (!$element->hasAttribute('data-section-id')) {
+                        $element->setAttribute('class', 'commentable-section');
+                        $element->setAttribute('data-section-id', self::$nextSectionId++);
+                    }
+                }
 
-			$regex = '|(<p)[^>]*(>)|';
+                return $dom->saveHTML();
+            }
+            return $content;
+        }
 
-			return preg_replace_callback( $regex, array( $this, '_addAttributesToParagraphCallback' ), $content );
+        /**
+         * gets the current post type in the WordPress Admin
+         */
+        public function get_current_post_type()
+        {
+            global $post, $typenow, $current_screen;
 
-		}/* the_content__addSideCommentsClassesToContent() */
+            //we have a post so we can just get the post type from that
+            if ($post && $post->post_type)
+                return $post->post_type;
 
+            //check the global $typenow - set in admin.php
+            elseif ($typenow)
+                return $typenow;
 
-		/**
-		 * The callback function for the preg_replace_callback function run on the_content
-		 * This adds a class and an incremental integer to a data attribute
-		 *
-		 * @since 0.1
-		 *
-		 * @param array $matches the matches of the regex from the_content
-		 * @return string add a class and data attribute to the individual matches
-		 */
+            //check the global $current_screen object - set in sceen.php
+            elseif ($current_screen && $current_screen->post_type)
+                return $current_screen->post_type;
 
-		private function _addAttributesToParagraphCallback( $matches )
-		{
+            //check the post_type querystring
+            elseif (isset($_REQUEST['post_type']))
+                return sanitize_key($_REQUEST['post_type']);
 
-			static $i = 1;
-			
-			return sprintf( '<p class="commentable-section" data-section-id="%d">', $i++ );
+            //check if we have the post id
+            elseif (isset($_REQUEST['post']))
+                return get_post_type($_REQUEST['post']);
 
-		}/* _addAttributesToParagraphCallback() */
+            //last attempt try to handle data coming from wp_autosave
+            $ajaxData = $_REQUEST['data']['wp_autosave'];
 
+            //check the post_type querystring
+            if (isset($ajaxData['post_type']))
+                return sanitize_key($ajaxData['post_type']);
+
+            //check if we have the post id
+            elseif (isset($ajaxData['post']))
+                return get_post_type($ajaxData['post']);
+
+            return null;
+        }
 
 		/**
 		 * side-comments.js requires data to be passed to the JS. This method gathers the information
@@ -202,7 +248,6 @@
 		 * @param int $postID - the ID of the post for which we wish to get comment data
 		 * @return array $commentData - an associative array of comment data and user data
 		 */
-
 		public function getCommentsData( $postID = false )
 		{
 
