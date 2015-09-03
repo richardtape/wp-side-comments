@@ -59,6 +59,8 @@
 			// When side comments are removed, the totals are wrong on the front-end
 			add_filter( 'get_comments_number', array( $this, 'get_comments_number__adjustCommentsNumberToRemoveSidecomments' ), 10, 2 );
 
+			// Get the proper template for post type texto-em-debate
+			add_filter( 'single_template', array($this,'get_texto_em_debate_template'));
 		}/* __construct() */
 
 
@@ -767,6 +769,15 @@
 			return $linearComments;	
 
 		}/* get_comments_number__adjustCommentsNumberToRemoveSidecomments() */
+
+		public function get_texto_em_debate_template($single_template)
+		{
+			global $post;
+			if ($post->post_type == 'texto-em-debate') {
+				$single_template = plugin_dir_path(__FILE__) . 'single-texto-em-debate-template.php';
+			}
+			return $single_template;
+		}
 
 	}/* class CTLT_WP_Side_Comments */
 
