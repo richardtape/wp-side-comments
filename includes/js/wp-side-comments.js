@@ -180,6 +180,49 @@ jQuery(document).ready(function($) {
 			    this.scrollTop += ( delta < 0 ? 1 : -1 ) * 10;
 			    e.preventDefault();
 			});
-		}	
+		}
+
+
+	//VOTING CONTROL
+	var voteButtonClicked = false;
+
+	// catch the upvote/downvote action
+	$('div.commentable-container').on('click', 'div.comment-weight-container > span > a', function (e) {
+		e.preventDefault();
+		var value = 0;
+		var comment_id = $(this).data('commentId');
+		if ($(this).hasClass('vote-up')) {
+			value = 'upvote';
+		} else if ($(this).hasClass('vote-down')) {
+			value = 'downvote';
+		}
+
+		if (false === voteButtonClicked) {
+			voteButtonClicked = true;
+			var post = $.post(
+				commentsData.ajaxURL, {
+					action: 'comment_vote_callback',
+					vote: value,
+					comment_id: comment_id,
+					vote_nonce: commentsData.voting_nonce
+				}
+			);
+
+			post.done(function (data) {
+
+				if (data.success === false) {
+					//TODO: encontrar uma maneira de exibir mensagens pra o usuário
+					console.log(data.data.error_message);
+				} else {
+					// update karma
+					$('#comment-weight-value-' + data.data.comment_id).text(data.data.weight);
+					$('#comment-'+value+'-value-' + data.data.comment_id).text(data.data.full_karma);
+					console.log(data.data.success_message);
+				}
+
+				voteButtonClicked = false;
+			});
+		}
+	});
 
 });
