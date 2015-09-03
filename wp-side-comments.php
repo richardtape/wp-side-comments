@@ -241,6 +241,18 @@
 
 		}/* getCommentsData() */
 
+        private static function getFriendlyCommentTime($comment)
+        {
+            $date = $comment->comment_date;
+            $time = strtotime($date);
+            $time_diff = time() - $time;
+            if ($time_diff >= 0 && $time_diff < 24 * 60 * 60)
+                $display = sprintf(__('%s atrás'), human_time_diff($time));
+            else //TODO: ajustar formato para o termo 'às' também ser recuperado do arquivo de tradução
+                $display = date_i18n(get_option('date_format').' \à\s '.get_option('time_format'), strtotime($date)) ;
+
+            return $display;
+        }
 
 		/**
 		 * Get data for a single post's comments.
@@ -270,7 +282,8 @@
 			// Build our args for get_comments
 			$getCommentArgs = array(
 				'post_id' => $postID,
-				'status' => 'approve'
+				'status' => 'approve',
+				'order' => 'ASC'
 			);
 
 			$comments = get_comments( $getCommentArgs );
@@ -304,12 +317,13 @@
 				}
 
 				$toAdd = array(
-					'authorAvatarUrl' => static::get_avatar_url( $commentData->comment_author_email ),
+					'authorAvatarUrl' => static::get_avatar_url($commentData->comment_author_email),
 					'authorName' => $commentData->comment_author,
 					'comment' => $commentData->comment_content,
-          'commentID' => $commentData->comment_ID,
+					'commentID' => $commentData->comment_ID,
 					'authorID' => $commentData->user_id,
-          'parentID' => $commentData->comment_parent
+					'parentID' => $commentData->comment_parent,
+					'time' => static::getFriendlyCommentTime($commentData)
 				);
 
 				if( $sideComment && $sideComment != '' ){
@@ -500,14 +514,14 @@
 
 				// Now we have a new comment ID, we need to add the meta for the section, stored as 'side-comment-section'
 				update_comment_meta( $newCommentID, 'side-comment-section', $sectionID );
-
+				$comment = get_comment($newCommentID);
 				// Setup our data which we're echoing
 				$result = array(
 					'type' => 'success',
 					'newCommentID' => $newCommentID,
 					'commentApproval' => $commentApproval,
+					'commentTime' => static::getFriendlyCommentTime($comment)
 				);
-
 			}
 			else
 			{

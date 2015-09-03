@@ -69,11 +69,11 @@ jQuery(document).ready(function($) {
 			success: function( response ){
 
 				if( response.type == 'success' ){
-
 					// OK, we can insert it into the stream
-					comment.id = response.newCommentID;
 					newCommentID = response.newCommentID;
+					comment.id = response.newCommentID;
                     comment.commentID = comment.id;
+					comment.time = response.commentTime;
 
 					// We'll need this if we want to delete the comment.
 					var newComment = sideComments.insertComment( comment );
