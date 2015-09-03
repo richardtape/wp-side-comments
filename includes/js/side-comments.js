@@ -3355,6 +3355,7 @@ require.register("side-comments/templates/comment.html", function (exports, requ
         '                       <span style="display: inline-block;">Discordo [<span style="display: inline;" id="comment-downvote-value-<%= comment.commentID %>"><%= comment.downvotes %></span>]</span>\n ' +
         '                   </div>\n ' +
         '                       <p class="comment right-of-avatar">\n    <%= comment.comment %>\n  </p>\n  ' +
+        '                       <p class="time right-of-avatar">\n    <%= comment.time %>\n  </p>\n  ' +
         '                       <a href="#" class="add-reply" data-parent="<%= comment.parentID%>" data-comment="<%= comment.commentID %>">Reply</a>\n    \n  ' +
         '                           <% if (currentUser){ %>\n     ' +
         '                                <div class="comment-form" data-parent="<%= comment.parentID%>" data-comment="<%= comment.commentID %>">\n        ' +
