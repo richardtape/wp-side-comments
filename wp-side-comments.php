@@ -16,6 +16,11 @@
 	define( 'CTLT_WP_SIDE_COMMENTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
 
+	/**
+	 * Inclui o arquivo de configurações do Custom Post Type "Texto em Debate'
+	 */
+	include(plugin_dir_path(__FILE__) . 'cpt-texto-em-debate.php');
+
 	class CTLT_WP_Side_Comments
 	{
 
