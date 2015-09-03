@@ -69,7 +69,10 @@
             //Set up AJAX handlers for comment voting
             add_action('wp_ajax_comment_vote_callback', array($this, 'comment_vote_callback'));
             add_action('wp_ajax_nopriv_comment_vote_callback', array($this, 'comment_vote_callback'));
-        }/* __construct() */
+
+			// Get the proper template for post type texto-em-debate
+			add_filter( 'single_template', array($this,'get_texto_em_debate_template'));
+		}/* __construct() */
 
 
 		/**
@@ -921,6 +924,17 @@
 
             return $comment['comment_karma'];
         }
+
+		public function get_texto_em_debate_template($single_template)
+		{
+			global $post;
+			if ($post->post_type == 'texto-em-debate') {
+				$single_template = plugin_dir_path(__FILE__) . 'single-texto-em-debate-template.php';
+			}
+			return $single_template;
+		}
+
+		/* class CTLT_WP_Side_Comments */
 
 		/**
 		 * Register the full count of upvote/downvote
