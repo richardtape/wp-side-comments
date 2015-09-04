@@ -30,7 +30,11 @@
          * @var WP_Side_Comments_Visitor
          */
         protected $visitor;
-        static $nextSectionId;
+
+		/**
+		 * @var int next number to use when creating commentable section id
+		 */
+		static $nextSectionId = 1;
 
 		/**
 		 * Set up our actions and filters
