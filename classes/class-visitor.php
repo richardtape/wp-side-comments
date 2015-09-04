@@ -212,7 +212,7 @@ class WP_Side_Comments_Visitor_Guest extends WP_Side_Comments_Visitor
         $lastAction = $loggedVotes['comment_id_' . $commentID]['last_action'];
 
         if ($lastAction === $action) {
-            return new \WP_Error('same_action', sprintf('Você não pode %s com este comentário de novo.', $action));
+            return new \WP_Error('same_action', sprintf('VocÃª nÃ£o pode %s com este comentÃ¡rio de novo.', $action));
         }
 
         // Is user trying to vote too fast?
@@ -225,7 +225,7 @@ class WP_Side_Comments_Visitor_Guest extends WP_Side_Comments_Visitor
         if ($elapsedTime > $this->interval) {
             return true; // user can vote, has been over 15 minutes since last vote.
         } else {
-            return new \WP_Error('voting_flood', 'Você não pode votar neste comentário novamente neste momento, aguarde ' . human_time_diff($lastVoted + $this->interval, $currentTime));
+            return new \WP_Error('voting_flood', 'VocÃª nÃ£o pode votar neste comentÃ¡rio novamente neste momento, aguarde ' . human_time_diff($lastVoted + $this->interval, $currentTime));
         }
 
     }
@@ -263,11 +263,11 @@ class WP_Side_Comments_Visitor_Member extends WP_Side_Comments_Visitor
         $comment = get_comment($commentID);
 
         if ($comment->user_id && ($this->visitorID === (int)$comment->user_id)) {
-            return new \WP_Error('upvote_own_comment', sprintf('Você não pode %s o seu próprio comentário.', $action));
+            return new \WP_Error('upvote_own_comment', sprintf('VocÃª nÃ£o pode %s o seu prÃ³prio comentÃ¡rio.', $action));
         }
 
         if (!is_user_logged_in()) {
-            return new \WP_Error('not_logged_in', 'Você não está logado para votar nos comentários');
+            return new \WP_Error('not_logged_in', 'VocÃª nÃ£o estÃ¡ logado para votar nos comentÃ¡rios');
         }
 
         $loggedVotes = get_user_option(self::KEY_COMMENTS_VOTED_ON, $this->visitorID);
@@ -281,7 +281,7 @@ class WP_Side_Comments_Visitor_Member extends WP_Side_Comments_Visitor
         $lastAction = $loggedVotes['comment_id_' . $commentID]['last_action'];
 
         if ($lastAction === $action) {
-            return new \WP_Error('same_action', sprintf('Você não pode %s com este comentário de novo.', $action));
+            return new \WP_Error('same_action', sprintf('VocÃª nÃ£o pode %s com este comentÃ¡rio de novo.', $action));
         }
 
         // Is user trying to vote too fast?
@@ -294,7 +294,7 @@ class WP_Side_Comments_Visitor_Member extends WP_Side_Comments_Visitor
         if ($elapsedTime > $this->interval) {
             return true; // user can vote, has been over 15 minutes since last vote.
         } else {
-            return new \WP_Error('voting_flood', 'Você não pode votar neste comentário novamente neste momento, aguarde ' . human_time_diff($lastVoted + $this->interval, $currentTime));
+            return new \WP_Error('voting_flood', 'VocÃª nÃ£o pode votar neste comentÃ¡rio novamente neste momento, aguarde ' . human_time_diff($lastVoted + $this->interval, $currentTime));
         }
 
     }
