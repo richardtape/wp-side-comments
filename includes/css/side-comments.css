@@ -112,12 +112,12 @@
   display: block;
 }
 
-/*sobrescreva esse seletor se quiser customizar a exibiÁ„o da votaÁ„o dos coment·rios*/
+/*sobrescreva esse seletor se quiser customizar a exibi√ß√£o da vota√ß√£o dos coment√°rios*/
 .side-comment .comment-weight-container{
   display: inline-block;
 }
 
-/*sobrescreva esse seletor se quiser customizar a exibiÁ„o da votaÁ„o dos coment·rios*/
+/*sobrescreva esse seletor se quiser customizar a exibi√ß√£o da vota√ß√£o dos coment√°rios*/
 .commentable-container .commentable-section .side-comment .comment-weight-container span{
   display: inline;
 }
@@ -127,4 +127,17 @@
     -webkit-overflow-scrolling: touch;
     overflow-x: hidden;
   }
+}
+
+.menu-topo-mc{
+  box-shadow: 0 0 7px 0 rgba(0,0,0,0.3);
+  background-color: #fff;
+  padding: 0 0 15px 0;
+}
+.fixed-top-mc{
+  position: fixed;
+  z-index:9999;
+  top: 0;
+  left: 0;
+  width: 100%;
 }
