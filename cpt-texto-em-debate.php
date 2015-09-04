@@ -77,6 +77,59 @@ function editor_visual_novas_cores($init)
 }
 
 add_filter('tiny_mce_before_init', 'editor_visual_novas_cores');
+/**
+ * Gera slug de um texto aleatório
+ *
+ * @param $text
+ * @return mixed|string
+ */
+function slugfy($text)
+{
+    // replace non letter or digits by -
+    $text = preg_replace('~[^\\pL\d]+~u', '-', $text);
+
+    // trim
+    $text = trim($text, '-');
+
+    // transliterate
+    $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
+
+    // lowercase
+    $text = strtolower($text);
+
+    // remove unwanted characters
+    $text = preg_replace('~[^-\w]+~', '', $text);
+
+    if (empty($text)) {
+        return 'n-a';
+    }
+
+    return $text;
+}
+
+/**
+ * Obtem o índice (table of contents) de um conteúdo html passado
+ *
+ * @param $content
+ * @return string
+ */
+function wp_side_comments_get_toc($content)
+{
+    $matches = array();
+    $roots = array();
+    $children = array();
+    if (preg_match_all('/(<h([1-6]{1})[^>]*)>(.*)<\/h\2>/msuU', $content, $matches, PREG_SET_ORDER)) {
+        foreach ($matches as $match) {
+            if ($match[2] == 1) {
+                $rootSlug = slugfy($match[3]);
+                $roots[$rootSlug] = $match[3];
+            } else {
+                $children[] = $match[3];
+            }
+        }
+    }
+    return array($roots, $children);
+}
 
 function wp_side_comments_parse_headers($content)
 {
@@ -89,7 +142,7 @@ function wp_side_comments_parse_headers($content)
 
 function wp_side_comments_parse_head($matches)
 {
-    return "<h{$matches[2]} {$matches[3]} id='" . str_replace('--', '-', str_replace('8211', '', dadospessoais_slugfy($matches[4]))) . "'>{$matches[4]}</h{$matches[2]}>";
+    return "<h{$matches[2]} {$matches[3]} id='" . str_replace('--', '-', str_replace('8211', '', slugfy($matches[4]))) . "'>{$matches[4]}</h{$matches[2]}>";
 }
 
 add_action('the_content', 'wp_side_comments_parse_headers');
