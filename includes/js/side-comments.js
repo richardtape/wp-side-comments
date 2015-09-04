@@ -3316,24 +3316,24 @@ require.register("side-comments/templates/section.html", function (exports, requ
     module.exports = '<div class="side-comment <%= sectionClasses %>">\n  ' +
         '                           <a href="#" class="marker">\n    <span><%= comments.length %></span>\n  </a>\n  \n  ' +
         '                   <div class="comments-wrapper">\n    ' +
-        '                       <i class="fa fa-times" onClick="document.body.click();"></i>' +
+        '                       <div class="text-right"><i class="fa fa-times" onClick="document.body.click();"></i></div>' +
         '                   <ul class="comments" data-root-id="0">\n      ' +
         '                           <% _.each(comments, function( comment ){ %>\n        ' +
         '                               <%= _.template(commentTemplate, { comment: comment, currentUser: currentUser }) %>\n      ' +
         '                           <% }) %>\n    ' +
         '                   </ul>\n    \n    ' +
-        '                       <a href="#" class="add-comment" data-parent="0" data-comment="">Leave a comment</a>\n    \n  ' +
+        '                       <a href="#" class="add-comment" data-parent="0" data-comment="">Deixe seu comentário</a>\n    \n  ' +
         '                           <% if (currentUser){ %>\n     ' +
         '                                <div class="comment-form" data-parent="0" data-comment="">\n        ' +
         '                           <div class="author-avatar">\n          ' +
         '                           <img src="<%= currentUser.avatarUrl %>">\n        ' +
         '                       </div>\n        ' +
         '                               <p class="author-name">\n          <%= currentUser.name %>\n        </p>\n        ' +
-        '                               <div class="comment-box right-of-avatar" contenteditable="true" data-placeholder-content="Leave a comment...">' +
+        '                               <div class="comment-box right-of-avatar" contenteditable="true" data-placeholder-content="Deixe seu comentário">' +
         '                                   </div>\n        ' +
         '                       <div class="actions right-of-avatar">\n          ' +
-        '                           <a href="#" class="action-link post" data-parent="0" data-comment="">Post</a>\n          ' +
-        '                           <a href="#" class="action-link cancel" data-parent="0" data-comment="">Cancel</a>\n        ' +
+        '                           <a href="#" class="action-link post" data-parent="0" data-comment="">Enviar</a>\n          ' +
+        '                           <a href="#" class="action-link cancel red" data-parent="0" data-comment="">Cancelar</a>\n        ' +
         '                       </div>\n      ' +
         '                                   </div>\n    ' +
         '                           <% } %>' +
@@ -3342,37 +3342,45 @@ require.register("side-comments/templates/section.html", function (exports, requ
 });
 
 require.register("side-comments/templates/comment.html", function (exports, require, module) {
-    module.exports = '<li data-comment-id="<%= comment.commentID %>" data-parent-id="<%= comment.parentID%>">\n  ' +
+    module.exports = '<li class="clearfix" data-comment-id="<%= comment.commentID %>" data-parent-id="<%= comment.parentID%>">\n  ' +
+                        '<div class="clearfix">\n' +
         '                   <div class="author-avatar">\n  ' +
         '                       <img src="<%= comment.authorAvatarUrl %>">\n  ' +
         '                   </div>\n  ' +
-        '                   <p class="author-name right-of-avatar">\n<%= comment.authorName %>\n</p>\n  ' +
-        '                   <div class="comment-weight-container" style="display: inline-block;">\n' +
-        '                       <span style="display: inline;"><a data-comment-id="<%= comment.commentID %>" class="vote-up" href="#">?</a></span>\n ' +
-        '                       <span style="display: inline;" id="comment-weight-value-<%= comment.commentID %>"><%= comment.karma %></span>\n ' +
-        '                       <span style="display: inline;"><a data-comment-id="<%= comment.commentID %>" class="vote-down" href="#">?</a></span>\n ' +
-        '                       <span style="display: inline-block;">Concordo [<span style="display: inline;" id="comment-upvote-value-<%= comment.commentID %>"><%= comment.upvotes %></span>]</span>\n ' +
-        '                       <span style="display: inline-block;">Discordo [<span style="display: inline;" id="comment-downvote-value-<%= comment.commentID %>"><%= comment.downvotes %></span>]</span>\n ' +
+                            '<div class="pull-left width-grid-2">\n' +
+            '                   <p class="author-name right-of-avatar">\n<%= comment.authorName %>\n</p>\n  ' +
+
+            '                       <p class="comment right-of-avatar">\n    <%= comment.comment %>\n  </p>\n  ' +
+            '                       <p class="time right-of-avatar">\n    <%= comment.time %>\n  </p>\n  ' +
+                            '</div>\n'+
+                        '</div>\n'+
+        '                   <div class="comment-weight-container clearfix" style="display: inline-block;">\n' +
+
+        //'                       <span style="display: inline;" id="comment-weight-value-<%= comment.commentID %>"><%= comment.karma %></span>\n ' +
+
+        '                       <span style="display: inline;"><a data-comment-id="<%= comment.commentID %>" class="vote-up btn btn-default btn-sm" href="#"><i class="fa fa-thumbs-o-up"></i> Concordo <%= comment.upvotes %></a></span>\n ' +
+        //'                       <span style="display: inline-block;"><span style="display: inline;" id="comment-upvote-value-<%= comment.commentID %>"><%= comment.upvotes %></span></span>\n ' +
+        '                       <span style="display: inline;"><a data-comment-id="<%= comment.commentID %>" class="vote-down red btn btn-default btn-sm ml-sm" href="#"><i class="fa fa-thumbs-o-down"></i> Discordo <%= comment.downvotes %></a></span>\n ' +
+        //'                       <span style="display: inline-block;"><span style="display: inline;" id="comment-downvote-value-<%= comment.commentID %>"><%= comment.downvotes %></span></span>\n ' +
         '                   </div>\n ' +
-        '                       <p class="comment right-of-avatar">\n    <%= comment.comment %>\n  </p>\n  ' +
-        '                       <p class="time right-of-avatar">\n    <%= comment.time %>\n  </p>\n  ' +
-        '                       <a href="#" class="add-reply" data-parent="<%= comment.parentID%>" data-comment="<%= comment.commentID %>">Reply</a>\n    \n  ' +
+
+        '                       <a href="#" class="add-reply btn btn-default btn-sm ml-sm" data-parent="<%= comment.parentID%>" data-comment="<%= comment.commentID %>"><i class="fa fa-level-down"></i> Responder</a>\n    \n  ' +
         '                           <% if (currentUser){ %>\n     ' +
-        '                                <div class="comment-form" data-parent="<%= comment.parentID%>" data-comment="<%= comment.commentID %>">\n        ' +
+        '                           <div class="comment-form" data-parent="<%= comment.parentID%>" data-comment="<%= comment.commentID %>">\n        ' +
         '                           <div class="author-avatar">\n          ' +
         '                           <img src="<%= currentUser.avatarUrl %>">\n        ' +
-        '                       </div>\n        ' +
+        '                               </div>\n        ' +
         '                               <p class="author-name">\n          <%= currentUser.name %>\n        </p>\n        ' +
-        '                               <div class="comment-box right-of-avatar" contenteditable="true" data-parent="<%= comment.parentID%>" data-comment="<%= comment.commentID %>" data-placeholder-content="Reply...">' +
-        '                                   </div>\n        ' +
+        '                               <div class="comment-box right-of-avatar" contenteditable="true" data-parent="<%= comment.parentID%>" data-comment="<%= comment.commentID %>" data-placeholder-content="Responder">' +
+        '                               </div>\n        ' +
         '                       <div class="actions right-of-avatar">\n          ' +
-        '                           <a href="#" class="action-link reply" data-parent="<%= comment.parentID %>" data-comment="<%= comment.commentID %>">Post</a>\n          ' +
-        '                           <a href="#" class="action-link cancel" data-parent="<%= comment.parentID %>" data-comment="<%= comment.commentID %>">Cancel</a>\n        ' +
+        '                           <a href="#" class="action-link reply" data-parent="<%= comment.parentID %>" data-comment="<%= comment.commentID %>">Enviar</a>\n          ' +
+        '                           <a href="#" class="action-link cancel red" data-parent="<%= comment.parentID %>" data-comment="<%= comment.commentID %>">Cancelar</a>\n        ' +
         '                       </div>\n      ' +
         '                                   </div>\n    ' +
         '                           <% } %>' +
         '                       <% if (currentUser && comment.authorId === currentUser.id){ %>\n  ' +
-        '                           <a href="#" class="action-link delete">Delete</a>\n  ' +
+        '                           <a href="#" class="action-link delete">Deletar</a>\n  ' +
         '                       <% } %>\n' +
         '                   </li>';
 });

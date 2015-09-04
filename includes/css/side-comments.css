@@ -91,9 +91,11 @@
   overflow: hidden;
 }
 .side-comment .comment,
-.side-comment .comment-box,
-.side-comment .actions {
-  margin: 0;
+.side-comment .comment-box{
+  margin: 5px;
+  padding: 10px;
+  background-color: #fff;
+  border: 1px solid #ccc;
 }
 .side-comment .actions,
 .side-comment .delete {
