@@ -75,6 +75,11 @@ jQuery(document).ready(function($) {
                     comment.commentID = comment.id;
 					comment.time = response.commentTime;
 
+					//setting default values for a new comment
+					comment.karma = 0;
+					comment.upvotes = 0;
+					comment.downvotes = 0;
+
 					// We'll need this if we want to delete the comment.
 					var newComment = sideComments.insertComment( comment );
 
@@ -211,7 +216,7 @@ jQuery(document).ready(function($) {
 			post.done(function (data) {
 
 				if (data.success === false) {
-					//TODO: encontrar uma maneira de exibir mensagens pra o usu·rio
+					//TODO: encontrar uma maneira de exibir mensagens pra o usu√°rio
 					console.log(data.data.error_message);
 				} else {
 					// update karma

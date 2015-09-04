@@ -3348,9 +3348,9 @@ require.register("side-comments/templates/comment.html", function (exports, requ
         '                   </div>\n  ' +
         '                   <p class="author-name right-of-avatar">\n<%= comment.authorName %>\n</p>\n  ' +
         '                   <div class="comment-weight-container" style="display: inline-block;">\n' +
-        '                       <span style="display: inline;"><a data-comment-id="<%= comment.commentID %>" class="vote-up" href="#">?</a></span>\n ' +
+        '                       <span style="display: inline;"><a data-comment-id="<%= comment.commentID %>" class="vote-up" href="#">+</a></span>\n ' +
         '                       <span style="display: inline;" id="comment-weight-value-<%= comment.commentID %>"><%= comment.karma %></span>\n ' +
-        '                       <span style="display: inline;"><a data-comment-id="<%= comment.commentID %>" class="vote-down" href="#">?</a></span>\n ' +
+        '                       <span style="display: inline;"><a data-comment-id="<%= comment.commentID %>" class="vote-down" href="#">-</a></span>\n ' +
         '                       <span style="display: inline-block;">Concordo [<span style="display: inline;" id="comment-upvote-value-<%= comment.commentID %>"><%= comment.upvotes %></span>]</span>\n ' +
         '                       <span style="display: inline-block;">Discordo [<span style="display: inline;" id="comment-downvote-value-<%= comment.commentID %>"><%= comment.downvotes %></span>]</span>\n ' +
         '                   </div>\n ' +
