@@ -393,7 +393,7 @@
 					'parentID' => $commentData->comment_parent,
 					'karma' => $commentData->comment_karma,
 					'upvotes' => $upvotes,
-					'downvotes' => $downvotes
+					'downvotes' => $downvotes,
 					'time' => static::getFriendlyCommentTime($commentData)
 				);
 
