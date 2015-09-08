@@ -210,10 +210,12 @@
                 }
 
                 foreach ($elements as $element) {
-                    if (!$element->hasAttribute('data-section-id')) {
-                        $element->setAttribute('class', 'commentable-section');
-                        $element->setAttribute('data-section-id', self::$nextSectionId++);
-                    }
+					if (!$element->hasAttribute('data-section-id')) {
+						$element->setAttribute('class', 'commentable-section');
+						$element->setAttribute('data-section-id', self::$nextSectionId);
+						$element->setAttribute('id', 'commentable-section-' . self::$nextSectionId);
+						self::$nextSectionId++;
+					}
                 }
 
                 return $dom->saveHTML();
