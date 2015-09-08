@@ -11,9 +11,9 @@
 abstract class WP_Side_Comments_Visitor
 {
     const KEY_PREFIX = 'wp_side_comments';
-    const KEY_VOTING_INTERVAL = self::KEY_PREFIX . '_voting_interval';
-    const KEY_COOKIE_EXPIRY = self::KEY_PREFIX . '_cookie_expiry';
-    const KEY_COOKIE_NAME = self::KEY_PREFIX . '_visitor';
+    const KEY_VOTING_INTERVAL = 'wp_side_comments_voting_interval';
+    const KEY_COOKIE_EXPIRY = 'wp_side_comments_cookie_expiry';
+    const KEY_COOKIE_NAME = 'wp_side_comments_visitor';
 
     protected $visitorID;
 
@@ -56,8 +56,8 @@ abstract class WP_Side_Comments_Visitor
 class WP_Side_Comments_Visitor_Guest extends WP_Side_Comments_Visitor
 {
 
-    const KEY_GUESTS_LOGGED_VOTES = self::KEY_PREFIX . '_guests_logged_votes';
-    const KEY_GUEST_LOGGED_VOTE = self::KEY_PREFIX . '_logged_guest_vote';
+    const KEY_GUESTS_LOGGED_VOTES = 'wp_side_comments_guests_logged_votes';
+    const KEY_GUEST_LOGGED_VOTE = 'wp_side_comments_logged_guest_vote';
 
     /**
      * Stores the IP address.
@@ -237,8 +237,8 @@ class WP_Side_Comments_Visitor_Guest extends WP_Side_Comments_Visitor
  */
 class WP_Side_Comments_Visitor_Member extends WP_Side_Comments_Visitor
 {
-    const KEY_COMMENTS_VOTED_ON = self::KEY_PREFIX . '_comments_voted_on';
-    const KEY_UPDATE_COMMENTS_VOTED_ON = self::KEY_PREFIX . '_update_comments_voted_on_for_user';
+    const KEY_COMMENTS_VOTED_ON = 'wp_side_comments_comments_voted_on';
+    const KEY_UPDATE_COMMENTS_VOTED_ON = 'wp_side_comments_update_comments_voted_on_for_user';
 
     /**
      * @param $visitorID WP User ID.
