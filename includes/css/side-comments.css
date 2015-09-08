@@ -42,6 +42,7 @@
   top: 0;
   right: 0;
   cursor: pointer;
+  text-align: center;
 }
 .side-comment .marker span {
   display: none;
