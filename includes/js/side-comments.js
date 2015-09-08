@@ -766,7 +766,7 @@ Section.prototype.insertComment = function( comment ) {
 	});
     if (comment.parentID != "0") {
         var parentID = comment.parentID,
-            parentOfCurrent = this.$el.find('[data-comment-id="'+parentID+'"]');
+            parentOfCurrent = this.$el.find('li[data-comment-id="'+parentID+'"]');
         if (parentOfCurrent.find('ul[data-root-id="'+parentID+'"]').length == 0) {
             parentOfCurrent.append('<ul class="comments" data-root-id="'+parentID+'"></ul>');
         }
@@ -891,7 +891,7 @@ Section.prototype.render = function() {
         // Need to put the comment threaded to it's parent
         if (currentComment.data("parent-id") != "0") {
             var parentID = currentComment.data('parent-id'),
-                parentOfCurrentComment = $(sideCommentWrap).find("[data-comment-id='" + parentID + "']");
+                parentOfCurrentComment = $(sideCommentWrap).find("li[data-comment-id='" + parentID + "']");
             if (parentOfCurrentComment.find("ul[data-root-id='" + parentID + "']").length == 0){
                 parentOfCurrentComment.append("<ul class='comments' data-root-id='"+parentID+"'></ul>");
             }
