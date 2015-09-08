@@ -115,20 +115,40 @@ function slugfy($text)
  */
 function wp_side_comments_get_toc($content)
 {
+    $output = "";
     $matches = array();
-    $roots = array();
-    $children = array();
+
     if (preg_match_all('/(<h([1-6]{1})[^>]*)>(.*)<\/h\2>/msuU', $content, $matches, PREG_SET_ORDER)) {
+        $output .= '<select class="form-control">';
+        $level = 1;
+
         foreach ($matches as $match) {
-            if ($match[2] == 1) {
-                $rootSlug = slugfy($match[3]);
-                $roots[$rootSlug] = $match[3];
+
+            $item_toc = '<option value="' . slugfy($match[3]) . '">' . $match[3] . '</option>';
+
+            if ($match[2] > $level) {
+
+                for (; $level < $match[2]; $level++) {
+                    $output .= "<optgroup>";
+                    $output .= $item_toc;
+                }
+            } elseif ($match[2] < $level) {
+                for (; $level > $match[2]; $level--) {
+                    $output .= "</optgroup>";
+                }
+
+                $output .= $item_toc;
+
             } else {
-                $children[] = $match[3];
+                $output .= $item_toc;
             }
         }
+
+        $output .= "</select>";
+
     }
-    return array($roots, $children);
+
+    return $output;
 }
 
 function wp_side_comments_parse_headers($content)
