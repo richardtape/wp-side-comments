@@ -62,11 +62,11 @@
 
 			// Set up AJAX handlers for the create a new comment action
 			add_action( 'wp_ajax_add_side_comment', array( $this, 'wp_ajax_add_side_comment__AJAXHandler' ) );
-			add_action( 'wp_ajax_nopriv_add_side_comment', array( $this, 'wp_ajax_nopriv_add_side_comment__redirectToLogin' ) );
+			add_action( 'wp_ajax_nopriv_add_side_comment', array( $this, 'wp_ajax_nopriv_side_comment__handler' ) );
 
 			// Set up AJAX handlers for comment deltion
 			add_action( 'wp_ajax_delete_side_comment', array( $this, 'wp_ajax_delete_side_comment__AJAXHandler' ) );
-			add_action( 'wp_ajax_nopriv_delete_side_comment', array( $this, 'wp_ajax_nopriv_delete_side_comment__redirectToLogin' ) );
+			add_action( 'wp_ajax_nopriv_delete_side_comment', array( $this, 'wp_ajax_nopriv_side_comment__handler' ) );
 
 			// Side comments shouldn't be shown in the main comment area at the bototm
 			add_filter( 'wp-hybrid-clf_list_comments_args', array( $this, 'list_comments_args__removeSidecommentsFromLinearComments' ) );
@@ -415,27 +415,26 @@
 		}/* getPostCommentData() */
 
 
-		/**
-		 * Get data about the current user that we will need in side-comments js
-		 *
-		 * @since 0.1
-		 *
-		 * @param null
-		 * @return array $userDetails data about the user
-		 */
+        /**
+         * Get data about the current user that we will need in side-comments js
+         *
+         * @since 0.1
+         *
+         * @param null
+         * @return array $userDetails data about the user
+         */
+        public static function getCurrentUserDetails()
+        {
+            $userID = get_current_user_id();
 
-		public static function getCurrentUserDetails()
-		{
+            if (!$userID) {
+                //evita exibição da opção de comentar para usuários anônimos.
+                return false;
+//                return static::getDefaultuserDetails();
+            }
 
-			$userID = get_current_user_id();
-
-			if( !$userID ){
-				return static::getDefaultuserDetails();
-			}
-
-			return static::getUserDetails( $userID );
-
-		}/* getCurrentUserDetails() */
+            return static::getUserDetails($userID);
+        }/* getCurrentUserDetails() */
 
 
 		/**
@@ -629,37 +628,28 @@
 		}/* wp_ajax_add_side_comment__AJAXHandler() */
 
 
-		/**
-		 * AJAX handler for when someone is NOT logged in and trying to make a comment.
-		 * Probably should never get to here because of comments_open() being used, but
-		 * better safe than sorry.
-		 *
-		 * @since 0.1
-		 *
-		 * @param string $param description
-		 * @return string|int returnDescription
-		 */
+        /**
+         * AJAX handler for when someone is NOT logged in and trying to make/delete a comment.
+         * Probably should never get to here because of comments_open() being used, but
+         * better safe than sorry.
+         *
+         * @since 0.1
+         *
+         * @param string $param description
+         * @return string|int returnDescription
+         */
+        public static function wp_ajax_nopriv_side_comment__handler()
+        {
+            $result = array(
+                'type' => 'failure',
+                'reason' => __('Você precisa estar logado para executar esta ação.', 'wp-side-comments')
+            );
 
-		public static function wp_ajax_nopriv_add_side_comment__redirectToLogin()
-		{
+            $result = json_encode($result);
+            echo $result;
 
-			$redirect = apply_filters( 'wp_side_comments_redirect_on_not_logged_in_comment_submission', urlencode( $_SERVER['HTTP_REFERER'] ) );
-
-			if( $redirect ){
-
-				wp_redirect(
-					add_query_arg(
-						array( 'redirect_to' => $redirect, 'nopriv' => '1' ),
-						home_url()
-					)
-				);
-				
-			}
-
-			die();
-
-		}/* wp_ajax_nopriv_add_side_comment__redirectToLogin() */
-
+            die();
+        }/* wp_ajax_nopriv_side_comment__hanlder() */
 
 		/**
 		 * AJAX handler for when a comment is deleted
@@ -723,27 +713,6 @@
 			die();
 
 		}/* wp_ajax_delete_side_comment__AJAXHandler() */
-
-
-		/**
-		 * AJAX handler for when a comment is deleted and the user isn't logged in. Good luck with that.
-		 *
-		 *
-		 * @since 0.1
-		 *
-		 * @param null
-		 * @return null
-		 */
-
-		public static function wp_ajax_nopriv_delete_side_comment__redirectToLogin()
-		{
-
-
-
-		}/* wp_ajax_nopriv_delete_side_comment__redirectToLogin() */
-
-
-
 
 		/**
 		 * Method to determine if we're on the right place to load our scripts/styles and do our bits and pieces

@@ -199,8 +199,13 @@ class WP_Side_Comments_Visitor_Guest extends WP_Side_Comments_Visitor
     public function isVoteValid($commentID, $action = '')
     {
 
-        // @TODO: can we check cookies for a WP cookie matching current domain. If so, then ask user to log in.
+        $guestVoteAllowed = false; //TODO: usar configuração do plugin para decidir se o voto anônimo deve ser permitido.
 
+        if (!$guestVoteAllowed) {
+            return new \WP_Error('not_allowed', 'Você precisa estar logado para executar essa ação.');
+        }
+
+        // @TODO: can we check cookies for a WP cookie matching current domain. If so, then ask user to log in.
         $loggedVotes = $this->retrieveLoggedVotes();
 
         // User has not yet voted on this comment
