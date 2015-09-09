@@ -413,13 +413,17 @@ Emitter(SideComments.prototype);
 /**
  * Adds the comments beside each commentable section.
  */
-SideComments.prototype.initialize = function( existingComments ) {
-  _.each(this.$el.find('.commentable-section'), function( section ){
+SideComments.prototype.initialize = function (existingComments) {
+  _.each(this.$el.find('.commentable-section'), function (section) {
     var $section = $(section);
     var sectionId = $section.data('section-id').toString();
-    var sectionComments = _.find(this.existingComments, { sectionId: sectionId });
+    var sectionComments = _.find(this.existingComments, {sectionId: sectionId});
 
-    this.sections.push(new Section(this.eventPipe, $section, this.currentUser, sectionComments));
+    //evita que o bloco de comentários seja exibido para blocos que não tem comentários e não estão logados.
+    if (sectionComments || this.currentUser) {
+      this.sections.push(new Section(this.eventPipe, $section, this.currentUser, sectionComments));
+    }
+
   }, this);
 };
 
@@ -3322,9 +3326,9 @@ require.register("side-comments/templates/section.html", function (exports, requ
         '                               <%= _.template(commentTemplate, { comment: comment, currentUser: currentUser }) %>\n      ' +
         '                           <% }) %>\n    ' +
         '                   </ul>\n    \n    ' +
-        '                       <a href="#" class="add-comment" data-parent="0" data-comment="">Deixe seu comentário</a>\n    \n  ' +
         '                           <% if (currentUser){ %>\n     ' +
-        '                                <div class="comment-form" data-parent="0" data-comment="">\n        ' +
+        '                       <a href="#" class="add-comment" data-parent="0" data-comment="">Deixe seu comentário</a>\n    \n  ' +
+        '                           <div class="comment-form" data-parent="0" data-comment="">\n        ' +
         '                           <div class="author-avatar">\n          ' +
         '                           <img src="<%= currentUser.avatarUrl %>">\n        ' +
         '                       </div>\n        ' +
@@ -3349,23 +3353,16 @@ require.register("side-comments/templates/comment.html", function (exports, requ
         '                   </div>\n  ' +
                             '<div class="pull-left width-grid-2">\n' +
             '                   <p class="author-name right-of-avatar">\n<%= comment.authorName %>\n</p>\n  ' +
-
             '                       <p class="comment right-of-avatar">\n    <%= comment.comment %>\n  </p>\n  ' +
             '                       <p class="time right-of-avatar">\n    <%= comment.time %>\n  </p>\n  ' +
                             '</div>\n'+
                         '</div>\n'+
         '                   <div class="comment-weight-container clearfix" style="display: inline-block;">\n' +
-
-        //'                       <span style="display: inline;" id="comment-weight-value-<%= comment.commentID %>"><%= comment.karma %></span>\n ' +
-
         '                       <span style="display: inline;"><a data-comment-id="<%= comment.commentID %>" class="vote-up btn btn-default btn-sm" href="#"><i class="fa fa-thumbs-o-up"></i> Concordo <%= comment.upvotes %></a></span>\n ' +
-        //'                       <span style="display: inline-block;"><span style="display: inline;" id="comment-upvote-value-<%= comment.commentID %>"><%= comment.upvotes %></span></span>\n ' +
         '                       <span style="display: inline;"><a data-comment-id="<%= comment.commentID %>" class="vote-down red btn btn-default btn-sm ml-sm" href="#"><i class="fa fa-thumbs-o-down"></i> Discordo <%= comment.downvotes %></a></span>\n ' +
-        //'                       <span style="display: inline-block;"><span style="display: inline;" id="comment-downvote-value-<%= comment.commentID %>"><%= comment.downvotes %></span></span>\n ' +
         '                   </div>\n ' +
-
-        '                       <a href="#" class="add-reply btn btn-default btn-sm ml-sm" data-parent="<%= comment.parentID%>" data-comment="<%= comment.commentID %>"><i class="fa fa-level-down"></i> Responder</a>\n    \n  ' +
         '                           <% if (currentUser){ %>\n     ' +
+        '                       <a href="#" class="add-reply btn btn-default btn-sm ml-sm" data-parent="<%= comment.parentID%>" data-comment="<%= comment.commentID %>"><i class="fa fa-level-down"></i> Responder</a>\n    \n  ' +
         '                           <div class="comment-form" data-parent="<%= comment.parentID%>" data-comment="<%= comment.commentID %>">\n        ' +
         '                           <div class="author-avatar">\n          ' +
         '                           <img src="<%= currentUser.avatarUrl %>">\n        ' +

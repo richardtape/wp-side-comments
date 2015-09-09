@@ -12,14 +12,16 @@ jQuery(document).ready(function($) {
 	var ajaxURL 			= commentsData.ajaxURL;
 	var containerSelector 	= commentsData.containerSelector;
 
-	// Format our data as side-comments.js requires
-	currentUser = {
-		
-		id: userData.id,
-		avatarUrl: userData.avatar,
-		name: userData.name
+	var currentUser = null;
 
-	};
+	if (userData) {
+		// Format our data as side-comments.js requires
+		currentUser = {
+			id: userData.id,
+			avatarUrl: userData.avatar,
+			name: userData.name
+		};
+	}
 
 	var formattedCommentData = [];
 	var key;
