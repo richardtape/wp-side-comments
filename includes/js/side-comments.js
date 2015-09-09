@@ -410,18 +410,22 @@ require.register("side-comments/js/main.js", function (exports, require, module)
 // Mix in Emitter
     Emitter(SideComments.prototype);
 
-    /**
-     * Adds the comments beside each commentable section.
-     */
-    SideComments.prototype.initialize = function (existingComments) {
-        _.each(this.$el.find('.commentable-section'), function (section) {
-            var $section = $(section);
-            var sectionId = $section.data('section-id').toString();
-            var sectionComments = _.find(this.existingComments, {sectionId: sectionId});
+/**
+ * Adds the comments beside each commentable section.
+ */
+SideComments.prototype.initialize = function (existingComments) {
+  _.each(this.$el.find('.commentable-section'), function (section) {
+    var $section = $(section);
+    var sectionId = $section.data('section-id').toString();
+    var sectionComments = _.find(this.existingComments, {sectionId: sectionId});
 
-            this.sections.push(new Section(this.eventPipe, $section, this.currentUser, sectionComments));
-        }, this);
-    };
+    //evita que o bloco de comentários seja exibido para blocos que não tem comentários e não estão logados.
+    if (sectionComments || this.currentUser) {
+      this.sections.push(new Section(this.eventPipe, $section, this.currentUser, sectionComments));
+    }
+
+  }, this);
+};
 
     /**
      * Shows the side comments.
@@ -3366,8 +3370,9 @@ require.register("side-comments/templates/section.html", function (exports, requ
                     '<% }) %>\n ' +
             '</ul>\n \n ' +
         '</div>\n ' +
-        '<a href="#" class="add-comment mt-sm btn btn-success btn-md" data-parent="0" data-comment="">Deixe seu comentário</a>\n \n '+
         '<% if (currentUser){ %>\n ' +
+        '<a href="#" class="add-comment mt-sm btn btn-success btn-md" data-parent="0" data-comment="">Deixe seu comentário</a>\n \n '+
+        
         '<div class="comment-form" data-parent="0" data-comment="">\n '+
             '<div class="author-avatar">\n ' +
                 '<img src="<%= currentUser.avatarUrl %>">\n '+
@@ -3407,9 +3412,11 @@ require.register("side-comments/templates/comment.html", function (exports, requ
                     '<a data-comment-id="<%= comment.commentID %>" class="vote-up btn btn-default btn-xs fontsize-sm text-green" href="#"><i class="fa fa-thumbs-o-up"></i> Concordo <span id="comment-upvote-value-<%= comment.commentID %>"><%= comment.upvotes %></span></a> \n ' +
                     '<a data-comment-id="<%= comment.commentID %>" class="vote-down btn btn-default btn-xs fontsize-sm red" href="#"><i class="fa fa-thumbs-o-down"></i> Discordo <span id="comment-downvote-value-<%= comment.commentID %>"><%= comment.downvotes %></span></a>\n ' +        
                 '</div>\n ' +
+                '<% if (currentUser){ %>\n ' +
                 '<div class="mt-xs">\n' +
                     '<a href="#" class="add-reply fontsize-sm" data-parent="<%= comment.parentID%>" data-comment="<%= comment.commentID %>"> <i class="fa fa-comment-o"></i> Responder</a>\n \n  ' +
-                '</div>\n ' +    
+                '</div>\n ' +   
+                '<% } %>\n' + 
             '</div>\n ' +
         '</div>\n  ' +
     '</div>\n  ' +
