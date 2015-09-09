@@ -354,3 +354,46 @@ p.commentable-section.active {
   position: absolute;
   color: #999999;
 }
+@media only screen and (max-width: 992px) {
+  p.commentable-section.active {
+    width: 50%;
+  }
+}
+@media only screen and (max-width: 768px) {
+  p.commentable-section.active {
+    width: 100%;
+  }
+  .commentable-section.active:after {
+    display: none;
+  }
+  .side-comment {
+    position: relative;
+    width: 100%;
+    left: 0;
+    margin-top: 25px;
+  }
+  .side-comment .comments-wrapper {
+    position: initial;
+    width: 100%;
+  }
+  .comments-wrapper:before {
+    font-family: FontAwesome;
+    font-weight: normal;
+    font-style: normal;
+    text-decoration: inherit;
+    -webkit-font-smoothing: antialiased;
+    content: "\F0D8";
+    font-size: 50px;
+    display: block;
+    left: 50%;
+    top: -45px;
+    position: absolute;
+    color: #999999;
+  }
+}
+@media only screen and (max-width: 480px) {
+  p.commentable-section.active {
+    padding: 5px;
+    border-left-width: 5px;
+  }
+}
