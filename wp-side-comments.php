@@ -102,11 +102,10 @@
 				return;
 			}
 
-			// The theme to load - must be a string of the url to load
-			$theme = apply_filters( 'wp_side_comments_css_theme', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/css/themes/default-theme.css' );
-
-			wp_register_style('side-comments-style', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/css/side-comments.css');
-			wp_register_style('texto-em-debate-style', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/css/texto-em-debate.css');
+			wp_register_style( 'side-comments-style', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/css/side-comments-full.css' );
+			wp_register_script( 'side-comments-script', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/js/side-comments.js', array ( 'jquery' ) );
+			wp_register_script( 'wp-side-comments-script', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/js/wp-side-comments.js', array ( 'jquery', 'side-comments-script' ), null, true );
+			wp_register_style( 'texto-em-debate-style', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/css/texto-em-debate.css');
 
 			wp_register_script('side-comments-script', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/js/side-comments.js', array('jquery'));
 			wp_register_script('wp-side-comments-script', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/js/wp-side-comments.js', array('jquery', 'side-comments-script'), null, true);
@@ -120,14 +119,6 @@
 			wp_enqueue_script('wp-side-comments-script');
 			wp_enqueue_script('texto-em-debate-script');
 			wp_enqueue_script('highlight-script');
-
-			if( $theme && !empty( $theme ) )
-			{
-
-				wp_register_style( 'side-comments-theme', $theme );
-				wp_enqueue_style( 'side-comments-theme' );
-
-			} 
 
 			// Need to get some data for our JS, which we pass to it via localization
 			$data = $this->getCommentsData();

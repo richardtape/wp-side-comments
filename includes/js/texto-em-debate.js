@@ -14,7 +14,7 @@ jQuery("document").ready(function ($) {
     $("select.form-control").change(function () {
         var value = this.value;
         scrollTo($("#" + value));
-    })
+    });
 
     $("#btn-search-texto-em-debate").click(function () {
         highlightText();
