@@ -1,0 +1,7 @@
+.highlight {
+    background-color: yellow
+}
+
+.highlight.current {
+    background-color: orange;
+}

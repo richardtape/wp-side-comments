@@ -15,9 +15,26 @@
 
 	define( 'CTLT_WP_SIDE_COMMENTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
+    //includes required classes for comment voting
+    require_once plugin_dir_path(__FILE__) . 'classes/class-visitor.php';
+
+	/**
+	 * Inclui o arquivo de configurações do Custom Post Type "Texto em Debate'
+	 */
+	include(plugin_dir_path(__FILE__) . 'cpt-texto-em-debate.php');
 
 	class CTLT_WP_Side_Comments
 	{
+
+        /**
+         * @var WP_Side_Comments_Visitor
+         */
+        protected $visitor;
+
+		/**
+		 * @var int next number to use when creating commentable section id
+		 */
+		static $nextSectionId = 1;
 
 		/**
 		 * Set up our actions and filters
@@ -37,16 +54,19 @@
 			// Add a filter to the post container
 			add_filter( 'post_class', array( $this, 'post_class__addSideCommentsClassToContainer' ) );
 
-			// Filter the_content to add our specific inline classes
-			add_filter( 'the_content', array( $this, 'the_content__addSideCommentsClassesToContent' ) );
+            // Add p tag to the content before add side comment classes
+            add_filter('content_save_pre', 'wpautop');
+
+            // Filter content_save_pre to add our specific inline classes
+            add_filter('content_save_pre', array($this, 'addSideCommentsClassesToContent'));
 
 			// Set up AJAX handlers for the create a new comment action
 			add_action( 'wp_ajax_add_side_comment', array( $this, 'wp_ajax_add_side_comment__AJAXHandler' ) );
-			add_action( 'wp_ajax_nopriv_add_side_comment', array( $this, 'wp_ajax_nopriv_add_side_comment__redirectToLogin' ) );
+			add_action( 'wp_ajax_nopriv_add_side_comment', array( $this, 'wp_ajax_nopriv_side_comment__handler' ) );
 
 			// Set up AJAX handlers for comment deltion
 			add_action( 'wp_ajax_delete_side_comment', array( $this, 'wp_ajax_delete_side_comment__AJAXHandler' ) );
-			add_action( 'wp_ajax_nopriv_delete_side_comment', array( $this, 'wp_ajax_nopriv_delete_side_comment__redirectToLogin' ) );
+			add_action( 'wp_ajax_nopriv_delete_side_comment', array( $this, 'wp_ajax_nopriv_side_comment__handler' ) );
 
 			// Side comments shouldn't be shown in the main comment area at the bototm
 			add_filter( 'wp-hybrid-clf_list_comments_args', array( $this, 'list_comments_args__removeSidecommentsFromLinearComments' ) );
@@ -54,6 +74,12 @@
 			// When side comments are removed, the totals are wrong on the front-end
 			add_filter( 'get_comments_number', array( $this, 'get_comments_number__adjustCommentsNumberToRemoveSidecomments' ), 10, 2 );
 
+            //Set up AJAX handlers for comment voting
+            add_action('wp_ajax_comment_vote_callback', array($this, 'comment_vote_callback'));
+            add_action('wp_ajax_nopriv_comment_vote_callback', array($this, 'comment_vote_callback'));
+
+			// Get the proper template for post type texto-em-debate
+			add_filter( 'single_template', array($this,'get_texto_em_debate_template'));
 		}/* __construct() */
 
 
@@ -76,24 +102,23 @@
 				return;
 			}
 
-			// The theme to load - must be a string of the url to load
-			$theme = apply_filters( 'wp_side_comments_css_theme', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/css/themes/default-theme.css' );
-
-			wp_register_style( 'side-comments-style', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/css/side-comments.css' );
+			wp_register_style( 'side-comments-style', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/css/side-comments-full.css' );
 			wp_register_script( 'side-comments-script', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/js/side-comments.js', array ( 'jquery' ) );
 			wp_register_script( 'wp-side-comments-script', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/js/wp-side-comments.js', array ( 'jquery', 'side-comments-script' ), null, true );
+			wp_register_style( 'texto-em-debate-style', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/css/texto-em-debate.css');
 
-			wp_enqueue_style( 'side-comments-style' );
-			wp_enqueue_script( 'side-comments-script' );
-			wp_enqueue_script( 'wp-side-comments-script' );
+			wp_register_script('side-comments-script', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/js/side-comments.js', array('jquery'));
+			wp_register_script('wp-side-comments-script', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/js/wp-side-comments.js', array('jquery', 'side-comments-script'), null, true);
+			wp_register_script('texto-em-debate-script', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/js/texto-em-debate.js', array('jquery'), null, true);
+			wp_register_script('highlight-script', CTLT_WP_SIDE_COMMENTS_PLUGIN_URL . 'includes/js/jquery.highlight-5.js', array('jquery'));
 
-			if( $theme && !empty( $theme ) )
-			{
+			wp_enqueue_style('side-comments-style');
+			wp_enqueue_style('texto-em-debate-style');
 
-				wp_register_style( 'side-comments-theme', $theme );
-				wp_enqueue_style( 'side-comments-theme' );
-
-			} 
+			wp_enqueue_script('side-comments-script');
+			wp_enqueue_script('wp-side-comments-script');
+			wp_enqueue_script('texto-em-debate-script');
+			wp_enqueue_script('highlight-script');
 
 			// Need to get some data for our JS, which we pass to it via localization
 			$data = $this->getCommentsData();
@@ -101,7 +126,10 @@
 			// ENsure we have a nonce for AJAX purposes
 			$data['nonce'] = wp_create_nonce( 'side_comments_nonce' );
 
-			// We also need the admin url as we need to send an AJAX request to it
+            //create a nonce for Comment Voting
+            $data['voting_nonce'] = wp_create_nonce( 'side_comments_voting_nonce' );
+
+            // We also need the admin url as we need to send an AJAX request to it
 			// ToDo: fix this, as we need this to not be https for it to work atm
 			$adminAjaxURL = admin_url( 'admin-ajax.php' );
 			$nonHTTPS = preg_replace( '/^https(?=:\/\/)/i', 'http', $adminAjaxURL );
@@ -146,51 +174,94 @@
 		}/* post_class__addSideCommentsClassToContainer() */
 
 
-		/**
-		 * Add our required classes and attributes to paragraph tags in the_content
-		 *
-		 * @since 0.1
-		 *
-		 * @param string $content the post content
-		 * @return string $content modified post content with our classes/attributes
-		 */
+        /**
+         * calculates the next section id value based on existent values
+         * @param $section
+         */
+        private function calcNextSectionId($section)
+        {
+            $sectionNumber = filter_var($section->getAttribute('data-section-id'), FILTER_SANITIZE_NUMBER_INT);
+            if ($sectionNumber >= self::$nextSectionId) {
+                self::$nextSectionId = $sectionNumber + 1;
+            }
+        }
 
-		public function the_content__addSideCommentsClassesToContent( $content )
-		{
+        /**
+         * Add our required classes and attributes to paragraph tags in the_content
+         *
+         * @since 0.1
+         *
+         * @param string $content the post content
+         * @return string $content modified post content with our classes/attributes
+         */
+        public function addSideCommentsClassesToContent($content)
+        {
+            if ($this->get_current_post_type() == "texto-em-debate" && $content) {
+                $content = str_replace("\\\"", '"', $content);
+                $dom = new DOMDocument();
+                $dom->loadHTML(mb_convert_encoding($content, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+                $elements = $dom->getElementsByTagName('p');
 
-			// Ensure we're on a post where we want to load our scripts/styles
-			$validScreen = $this->weAreOnAValidScreen();
+                foreach ($elements as $key => $element) {
+                    if ($element->hasAttribute('data-section-id')) {
+                        $this->calcNextSectionId($element);
+                    }
+                }
 
-			if( !$validScreen ){
-				return $content;
-			}
+                foreach ($elements as $element) {
+					if (!$element->hasAttribute('data-section-id')) {
+						$element->setAttribute('class', 'commentable-section');
+						$element->setAttribute('data-section-id', self::$nextSectionId);
+						$element->setAttribute('id', 'commentable-section-' . self::$nextSectionId);
+						self::$nextSectionId++;
+					}
+                }
 
-			$regex = '|(<p)[^>]*(>)|';
+                return $dom->saveHTML();
+            }
+            return $content;
+        }
 
-			return preg_replace_callback( $regex, array( $this, '_addAttributesToParagraphCallback' ), $content );
+        /**
+         * gets the current post type in the WordPress Admin
+         */
+        public function get_current_post_type()
+        {
+            global $post, $typenow, $current_screen;
 
-		}/* the_content__addSideCommentsClassesToContent() */
+            //we have a post so we can just get the post type from that
+            if ($post && $post->post_type)
+                return $post->post_type;
 
+            //check the global $typenow - set in admin.php
+            elseif ($typenow)
+                return $typenow;
 
-		/**
-		 * The callback function for the preg_replace_callback function run on the_content
-		 * This adds a class and an incremental integer to a data attribute
-		 *
-		 * @since 0.1
-		 *
-		 * @param array $matches the matches of the regex from the_content
-		 * @return string add a class and data attribute to the individual matches
-		 */
+            //check the global $current_screen object - set in sceen.php
+            elseif ($current_screen && $current_screen->post_type)
+                return $current_screen->post_type;
 
-		private function _addAttributesToParagraphCallback( $matches )
-		{
+            //check the post_type querystring
+            elseif (isset($_REQUEST['post_type']))
+                return sanitize_key($_REQUEST['post_type']);
 
-			static $i = 1;
-			
-			return sprintf( '<p class="commentable-section" data-section-id="%d">', $i++ );
+            //check if we have the post id
+            elseif (isset($_REQUEST['post']))
+                return get_post_type($_REQUEST['post']);
 
-		}/* _addAttributesToParagraphCallback() */
+            //last attempt try to handle data coming from wp_autosave
+            $ajaxData = $_REQUEST['data']['wp_autosave'];
 
+            //check the post_type querystring
+            if (isset($ajaxData['post_type']))
+                return sanitize_key($ajaxData['post_type']);
+
+            //check if we have the post id
+            elseif (isset($ajaxData['post']))
+                return get_post_type($ajaxData['post']);
+
+            return null;
+        }
 
 		/**
 		 * side-comments.js requires data to be passed to the JS. This method gathers the information
@@ -202,7 +273,6 @@
 		 * @param int $postID - the ID of the post for which we wish to get comment data
 		 * @return array $commentData - an associative array of comment data and user data
 		 */
-
 		public function getCommentsData( $postID = false )
 		{
 
@@ -241,6 +311,18 @@
 
 		}/* getCommentsData() */
 
+        private static function getFriendlyCommentTime($comment)
+        {
+            $date = $comment->comment_date;
+            $time = strtotime($date);
+            $time_diff = time() - $time;
+            if ($time_diff >= 0 && $time_diff < 24 * 60 * 60)
+                $display = sprintf(__('%s atrás'), human_time_diff($time));
+            else //TODO: ajustar formato para o termo 'às' também ser recuperado do arquivo de tradução
+                $display = date_i18n(get_option('date_format').' \à\s '.get_option('time_format'), strtotime($date)) ;
+
+            return $display;
+        }
 
 		/**
 		 * Get data for a single post's comments.
@@ -270,7 +352,8 @@
 			// Build our args for get_comments
 			$getCommentArgs = array(
 				'post_id' => $postID,
-				'status' => 'approve'
+				'status' => 'approve',
+				'order' => 'ASC'
 			);
 
 			$comments = get_comments( $getCommentArgs );
@@ -303,11 +386,20 @@
 					$sideCommentData[$section] = array();
 				}
 
+				$upvotes = get_comment_meta($commentData->comment_ID, WP_Side_Comments_Visitor::KEY_PREFIX . '_upvote', true) ?: 0;
+				$downvotes = get_comment_meta($commentData->comment_ID, WP_Side_Comments_Visitor::KEY_PREFIX . '_downvote', true) ?: 0;
+
 				$toAdd = array(
-					'authorAvatarUrl' => static::get_avatar_url( $commentData->comment_author_email ),
+					'authorAvatarUrl' => static::get_avatar_url($commentData->comment_author_email),
 					'authorName' => $commentData->comment_author,
 					'comment' => $commentData->comment_content,
-					'authorID' => $commentData->user_id
+					'commentID' => $commentData->comment_ID,
+					'authorID' => $commentData->user_id,
+					'parentID' => $commentData->comment_parent,
+					'karma' => $commentData->comment_karma,
+					'upvotes' => $upvotes,
+					'downvotes' => $downvotes,
+					'time' => static::getFriendlyCommentTime($commentData)
 				);
 
 				if( $sideComment && $sideComment != '' ){
@@ -323,27 +415,26 @@
 		}/* getPostCommentData() */
 
 
-		/**
-		 * Get data about the current user that we will need in side-comments js
-		 *
-		 * @since 0.1
-		 *
-		 * @param null
-		 * @return array $userDetails data about the user
-		 */
+        /**
+         * Get data about the current user that we will need in side-comments js
+         *
+         * @since 0.1
+         *
+         * @param null
+         * @return array $userDetails data about the user
+         */
+        public static function getCurrentUserDetails()
+        {
+            $userID = get_current_user_id();
 
-		public static function getCurrentUserDetails()
-		{
+            if (!$userID) {
+                //evita exibição da opção de comentar para usuários anônimos.
+                return false;
+//                return static::getDefaultuserDetails();
+            }
 
-			$userID = get_current_user_id();
-
-			if( !$userID ){
-				return static::getDefaultuserDetails();
-			}
-
-			return static::getUserDetails( $userID );
-
-		}/* getCurrentUserDetails() */
+            return static::getUserDetails($userID);
+        }/* getCurrentUserDetails() */
 
 
 		/**
@@ -395,7 +486,7 @@
 			}
 
 			// We need name, ID and avatar url
-			$name 			= ( isset( $user->user_nicename ) ) ? $user->user_nicename : $user->user_login;
+			$name 			= ( isset( $user->display_name ) ) ? $user->display_name : $user->user_login;
 
 			$avatarURL 		= static::get_avatar_url( $user->user_email );
 			$avatarURL 		= ( isset( $getAvatarUrl ) && !empty( $getAvatarUrl ) ) ? $getAvatarUrl : includes_url( 'images/blank.gif' );
@@ -461,6 +552,7 @@
 			$commentText	= strip_tags( $_REQUEST['comment'], '<p><a><br>' );
 			$authorName		= sanitize_text_field( $_REQUEST['authorName'] );
 			$authorID 		= absint( $_REQUEST['authorId'] );
+			$parentID 		= absint( $_REQUEST['parentID'] );
 
 			$user = get_user_by( 'id', $authorID );
 
@@ -482,7 +574,7 @@
 				'comment_author_url' 	=> null,
 				'comment_content' 		=> $commentText,
 				'comment_type' 			=> 'side-comment',
-				'comment_parent' 		=> 0,
+				'comment_parent' 		=> $parentID,
 				'user_id' 				=> $authorID,
 				'comment_author_IP' 	=> $ip,
 				'comment_agent' 		=> $_SERVER['HTTP_USER_AGENT'],
@@ -497,14 +589,14 @@
 
 				// Now we have a new comment ID, we need to add the meta for the section, stored as 'side-comment-section'
 				update_comment_meta( $newCommentID, 'side-comment-section', $sectionID );
-
+				$comment = get_comment($newCommentID);
 				// Setup our data which we're echoing
 				$result = array(
 					'type' => 'success',
 					'newCommentID' => $newCommentID,
 					'commentApproval' => $commentApproval,
+					'commentTime' => static::getFriendlyCommentTime($comment)
 				);
-
 			}
 			else
 			{
@@ -536,37 +628,28 @@
 		}/* wp_ajax_add_side_comment__AJAXHandler() */
 
 
-		/**
-		 * AJAX handler for when someone is NOT logged in and trying to make a comment.
-		 * Probably should never get to here because of comments_open() being used, but
-		 * better safe than sorry.
-		 *
-		 * @since 0.1
-		 *
-		 * @param string $param description
-		 * @return string|int returnDescription
-		 */
+        /**
+         * AJAX handler for when someone is NOT logged in and trying to make/delete a comment.
+         * Probably should never get to here because of comments_open() being used, but
+         * better safe than sorry.
+         *
+         * @since 0.1
+         *
+         * @param string $param description
+         * @return string|int returnDescription
+         */
+        public static function wp_ajax_nopriv_side_comment__handler()
+        {
+            $result = array(
+                'type' => 'failure',
+                'reason' => __('Você precisa estar logado para executar esta ação.', 'wp-side-comments')
+            );
 
-		public static function wp_ajax_nopriv_add_side_comment__redirectToLogin()
-		{
+            $result = json_encode($result);
+            echo $result;
 
-			$redirect = apply_filters( 'wp_side_comments_redirect_on_not_logged_in_comment_submission', urlencode( $_SERVER['HTTP_REFERER'] ) );
-
-			if( $redirect ){
-
-				wp_redirect(
-					add_query_arg(
-						array( 'redirect_to' => $redirect, 'nopriv' => '1' ),
-						home_url()
-					)
-				);
-				
-			}
-
-			die();
-
-		}/* wp_ajax_nopriv_add_side_comment__redirectToLogin() */
-
+            die();
+        }/* wp_ajax_nopriv_side_comment__hanlder() */
 
 		/**
 		 * AJAX handler for when a comment is deleted
@@ -630,27 +713,6 @@
 			die();
 
 		}/* wp_ajax_delete_side_comment__AJAXHandler() */
-
-
-		/**
-		 * AJAX handler for when a comment is deleted and the user isn't logged in. Good luck with that.
-		 *
-		 *
-		 * @since 0.1
-		 *
-		 * @param null
-		 * @return null
-		 */
-
-		public static function wp_ajax_nopriv_delete_side_comment__redirectToLogin()
-		{
-
-
-
-		}/* wp_ajax_nopriv_delete_side_comment__redirectToLogin() */
-
-
-
 
 		/**
 		 * Method to determine if we're on the right place to load our scripts/styles and do our bits and pieces
@@ -760,10 +822,214 @@
 
 		}/* get_comments_number__adjustCommentsNumberToRemoveSidecomments() */
 
-	}/* class CTLT_WP_Side_Comments */
+        /**
+         * Ajax handler for the vote action.
+         */
+        public function comment_vote_callback()
+        {
+            check_ajax_referer('side_comments_voting_nonce', 'vote_nonce');
 
-	global $CTLT_WP_Side_Comments;
-	$CTLT_WP_Side_Comments = new CTLT_WP_Side_Comments();
+            $commentID = absint($_POST['comment_id']);
+            $vote = $_POST['vote'];
+
+            if (!in_array($vote, array('upvote', 'downvote'))) {
+                $return = array(
+                    'error_code' => 'invalid_action',
+                    'error_message' => 'Ação inválida',
+                    'comment_id' => $commentID,
+                );
+
+                wp_send_json_error($return);
+            }
+
+            $result = $this->commentVote($this->visitor->getId(), $commentID, $vote);
+
+            if (array_key_exists('error_message', $result)) {
+                wp_send_json_error($result);
+            } else {
+                wp_send_json_success($result);
+            }
+        }
+
+        /**
+         * Processes the comment vote logic.
+         *
+         * @param $vote
+         * @param $commentID
+         *
+         * @param $userID
+         *
+         * @return array
+         */
+        public function commentVote($userID, $commentID, $vote)
+        {
+
+            $labels = $this->getVoteLabels();
+
+            $voteIsValid = $this->getVisitor()->isVoteValid($commentID, $labels[$vote]);
+
+            if (is_wp_error($voteIsValid)) {
+
+                $errorCode = $voteIsValid->get_error_code();
+                $errorMsg = $voteIsValid->get_error_message($errorCode);
+
+                $return = array(
+                    'error_code' => $errorCode,
+                    'error_message' => $errorMsg,
+                    'comment_id' => $commentID,
+                );
+
+                return $return;
+
+            }
+
+            $commentKarma = $this->updateCommentKarma($commentID, $this->getVoteValue($vote));
+			$fullKarma = $this->updateFullKarma($commentID, $vote);
+            $this->getVisitor()->logVote($commentID, $vote);
+
+            do_action('hmn_cp_comment_vote', $userID, $commentID, $labels[$vote]);
+
+            $return = array(
+                'success_message' => 'Obrigado pelo seu voto!',
+                'weight' => $commentKarma,
+				'full_karma' => $fullKarma,
+                'comment_id' => $commentID
+            );
+
+            return $return;
+        }
+
+        /**
+         * @return array
+         */
+        public function getVoteLabels()
+        {
+            return array(
+                'upvote' => 'concordar',
+                'downvote' => 'discordar',
+            );
+        }
+
+        /**
+         * @return WP_Side_Comments_Visitor
+         */
+        public function getVisitor()
+        {
+            return $this->visitor;
+        }
+
+        /**
+         * Initialize the visitor object.
+         *
+         * @param WP_Side_Comments_Visitor $visitor
+         */
+        public function setVisitor($visitor)
+        {
+            $this->visitor = $visitor;
+        }
+
+        /**
+         * Updates the comment weight value in the database.
+         *
+         * @param $vote
+         * @param $commentID
+         *
+         * @return int
+         */
+        public function updateCommentKarma($commentID, $voteValue)
+        {
+
+            $comment = get_comment($commentID, ARRAY_A);
+
+            $comment['comment_karma'] += $voteValue;
+
+            wp_update_comment($comment);
+
+            $comment = get_comment($commentID, ARRAY_A);
+
+            /**
+             * Fires once a comment has been updated.
+             *
+             * @param array $comment The comment data array.
+             */
+            do_action('wp_side_comments_update_comment_weight', $comment);
+
+            return $comment['comment_karma'];
+        }
+
+		public function get_texto_em_debate_template($single_template)
+		{
+			global $post;
+			if ($post->post_type == 'texto-em-debate') {
+				$single_template = plugin_dir_path(__FILE__) . 'single-texto-em-debate-template.php';
+			}
+			return $single_template;
+		}
+
+		/* class CTLT_WP_Side_Comments */
+
+		/**
+		 * Register the full count of upvote/downvote
+		 * @param $commentID
+		 * @param $vote
+		 */
+		public function updateFullKarma($commentID, $vote)
+		{
+			$karma = get_comment_meta($commentID, WP_Side_Comments_Visitor::KEY_PREFIX . '_' . $vote, true);
+			if ($karma) {
+				$karma++;
+			} else {
+				$karma = 1;
+			}
+
+			update_comment_meta($commentID, WP_Side_Comments_Visitor::KEY_PREFIX . '_' . $vote, $karma);
+
+			return $karma;
+		}
+
+		/**
+         * Returns the value of an upvote or downvote.
+         *
+         * @param $type ( 'upvote' or 'downvote' )
+         *
+         * @return int|mixed|void
+         */
+        public function getVoteValue($type)
+        {
+            switch ($type) {
+                case 'upvote':
+                    $value = apply_filters('wp_side_comments_upvote_value', 1);
+                    break;
+                case 'downvote':
+                    $value = apply_filters('wp_side_comments_downvote_value', -1);
+                    break;
+                default:
+                    $value = new \WP_Error('invalid_vote_type', 'Tipo de voto inválido');
+                    break;
+            }
+
+            return $value;
+        }
+    }/* class CTLT_WP_Side_Comments */
+
+function wp_side_comments_init()
+{
+    global $CTLT_WP_Side_Comments;
+    $CTLT_WP_Side_Comments = new CTLT_WP_Side_Comments();
+
+    //TODO: vamos bloquear os votos de usuários não logados?
+    if (is_user_logged_in()) {
+        $visitor = new WP_Side_Comments_Visitor_Member(get_current_user_id());
+    } else {
+        $visitor = new WP_Side_Comments_Visitor_Guest($_SERVER['REMOTE_ADDR']);
+    }
+
+    if (!($CTLT_WP_Side_Comments->getVisitor() instanceof WP_Side_Comments_Visitor)) {
+        $CTLT_WP_Side_Comments->setVisitor($visitor);
+    }
+}
+
+add_action('plugins_loaded', 'wp_side_comments_init');
 
 
 	/**

@@ -42,6 +42,7 @@
   top: 0;
   right: 0;
   cursor: pointer;
+  text-align: center;
 }
 .side-comment .marker span {
   display: none;
@@ -91,9 +92,11 @@
   overflow: hidden;
 }
 .side-comment .comment,
-.side-comment .comment-box,
-.side-comment .actions {
-  margin: 0;
+.side-comment .comment-box{
+  margin: 5px;
+  padding: 10px;
+  background-color: #fff;
+  border: 1px solid #ccc;
 }
 .side-comment .actions,
 .side-comment .delete {
@@ -111,9 +114,33 @@
 .side-comment.active .comments-wrapper {
   display: block;
 }
+
+/*sobrescreva esse seletor se quiser customizar a exibição da votação dos comentários*/
+.side-comment .comment-weight-container{
+  display: inline-block;
+}
+
+/*sobrescreva esse seletor se quiser customizar a exibição da votação dos comentários*/
+.commentable-container .commentable-section .side-comment .comment-weight-container span{
+  display: inline;
+}
+
 @media (max-width: 768px) {
   body {
     -webkit-overflow-scrolling: touch;
     overflow-x: hidden;
   }
+}
+
+.menu-topo-mc{
+  box-shadow: 0 0 7px 0 rgba(0,0,0,0.3);
+  background-color: #fff;
+  padding: 0 0 15px 0;
+}
+.fixed-top-mc{
+  position: fixed;
+  z-index:9999;
+  top: 0;
+  left: 0;
+  width: 100%;
 }
